@@ -55,6 +55,24 @@ Two reasons the split exists, and neither is about tidiness:
 Because there is one host per approach kind, **a skill may document at most two approaches**. That cap
 is what keeps the host count at two as skills are added.
 
+### One limit to know before you write a template for site 2
+
+**Site 2 runs ModelsBuilder in `Nothing` mode, so there are no generated models.** A template that does
+`@inherits UmbracoViewPage<Home>`, or reads a property through a generated accessor, will not compile
+there — while working perfectly on a real Umbraco site, which generates models in development by default.
+Site 2 would then report that as *your skill's* failure, and runtime-compiled templates surface a compile
+error only as a 500 with no diagnostics, so the message would tell you nothing.
+
+Use `UmbracoViewPage` (non-generic) with `Value<T>("alias")` and `HasProperty("alias")`, as
+`umbraco-sitemap`'s and `umbraco-custom-error-pages`' Approach B templates do. That's better guidance for
+users anyway — it doesn't assume their site generates models, or that a property exists on their types.
+
+The reason is not a preference: `InMemoryAuto` needs `Umbraco.Cms.DevelopmentMode.Backoffice`, whose
+`InMemoryModelFactory` gets disposed while the host is still live under `WebApplicationFactory`. Any
+content operation touching URL generation then dies on `ObjectDisposedException: ReaderWriterLockSlim`,
+which shows up as fixture content silently never being created. Razor runtime compilation — the one thing
+site 2 actually needs from that package — is referenced directly instead.
+
 ## What you add
 
 ```
