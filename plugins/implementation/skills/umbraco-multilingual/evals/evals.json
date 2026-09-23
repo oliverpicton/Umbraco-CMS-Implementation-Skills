@@ -34,15 +34,16 @@
     },
     {
       "id": 3,
-      "prompt": "On our bilingual (English/Danish) Umbraco 17 site we hardcoded button text like 'Read more' and 'Contact us' in the Razor views, so the Danish pages still show English buttons. Also, our developer wrote `@(Model.Value<string>(\"subtitle\") ?? Model.Value<string>(\"subtitle\", \"en-US\"))` to fall back to English when the Danish subtitle is empty, but Danish pages just show nothing. Fix both.",
-      "expected_output": "The agent moves the fixed labels into Dictionary items rendered with Umbraco.GetDictionaryValue / GetDictionaryValueOrDefault, and explains that Value<string> returns an empty string rather than null so the ?? never fires, replacing it with Fallback.ToLanguage (with the Danish language's fallback set to English) or an IsNullOrWhiteSpace check.",
+      "prompt": "We're scripting our Danish launch on Umbraco 17 so it's repeatable across environments. A teammate wrote a package migration that imports a package.xml containing our da-DK language and about 40 dictionary items (the Danish values use LanguageCultureAlias=\"da-dk\"). A startup job then sets the Danish property values on our existing, already-published English pages and calls IContentPublishingService.PublishBranchAsync(rootKey, [\"*\"], PublishBranchFilter.IncludeUnpublished, userKey, false). For the Danish launch they also set Umbraco:CMS:Global:DefaultUILanguage to \"da-DK\" in appsettings.json. After deploying: every dictionary item only has English, the Danish page edits never go live, templates using Fallback.ToLanguage show nothing for blank Danish fields instead of English, and the site's default language is still English. What went wrong and how do we fix each problem?",
+      "expected_output": "The agent diagnoses four separate causes: the package's lowercase LanguageCultureAlias is matched case-sensitively so the Danish dictionary values are silently dropped; a branch publish with \"*\" on already-published variant nodes republishes only the default culture; package import never sets a language's fallback so Fallback.ToLanguage has nothing to fall back to; and DefaultUILanguage is the backoffice UI language, not the content default language. It fixes each without lowercasing cultures.",
       "files": [],
       "expectations": [
-        "The agent moves hardcoded UI labels into Dictionary items (Translation → Dictionary) with a value per language",
-        "Views render them with Umbraco.GetDictionaryValue or GetDictionaryValueOrDefault",
-        "The agent explains that Value<string> returns an empty string, not null, for a blank value, so the `??` never falls back",
-        "The fix uses Fallback.ToLanguage (and notes the Danish language's fallback must be set to English) or string.IsNullOrWhiteSpace",
-        "If no buildable Umbraco project is available, the agent does not falsely claim to have verified the change"
+        "The agent explains the Danish dictionary values were dropped because LanguageCultureAlias is matched case-sensitively against the installed language's ISO code, so \"da-dk\" doesn't match \"da-DK\", and fixes it by using the exact ISO casing \"da-DK\"",
+        "The agent explains that PublishBranchAsync with [\"*\"] on already-published variant nodes republishes only the default culture, and fixes it by passing explicit cultures (e.g. [\"en-US\", \"da-DK\"]) or each node's cultures",
+        "The agent explains that importing a language from a package does not set its fallback language, and fixes it by setting da-DK's fallback to English (backoffice Settings → Languages, MCP, or ILanguageService/FallbackIsoCode in the migration)",
+        "The agent explains that Umbraco:CMS:Global:DefaultUILanguage is the backoffice UI language, not the site's default content language, which is set on the language itself (and questions whether Danish should really become the default)",
+        "The agent does not propose lowercasing cultures or comparing them with ToLower() as a fix",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have run the migration or verified the fixes"
       ]
     },
     {
@@ -61,12 +62,13 @@
     {
       "id": 5,
       "prompt": "We need to add Chinese (Hong Kong), zh-HK, as a content language on our Umbraco 17.5 site running on Linux, but it doesn't appear in the dropdown under Settings → Languages → Create. What's going on and how do we fix it?",
-      "expected_output": "The agent explains that with .NET app-local ICU some valid BCP 47 cultures are reported as custom cultures and rejected by Umbraco's IIsoCodeValidator, and adds the documented composer replacing IIsoCodeValidator and ICultureService for zh-HK, with the caveat that the validator affects all culture validation.",
+      "expected_output": "The agent explains that under ICU a valid culture can be missing from the dropdown either because GetCultures doesn't enumerate it or because it is flagged UserCustomCulture and rejected by IIsoCodeValidator, and fixes it with a composer that replaces ICultureService (and IIsoCodeValidator where the culture is rejected) — e.g. the documented composer — with the caveat that a replaced validator affects all culture validation.",
       "files": [],
       "expectations": [
-        "The agent explains that zh-HK is filtered out because .NET/ICU reports it as a user custom culture (or doesn't enumerate it), and Umbraco's IIsoCodeValidator rejects it",
-        "The agent adds a composer that replaces IIsoCodeValidator and ICultureService (e.g. via AddUnique) to allow zh-HK, following the official docs",
-        "The agent warns that the replaced validator is used for all culture validation in Umbraco, not just the language dropdown",
+        "The agent explains that zh-HK is missing because under ICU it is either not enumerated by CultureInfo.GetCultures or flagged as a user custom culture and rejected by Umbraco's IIsoCodeValidator",
+        "The agent adds a composer that replaces ICultureService (via AddUnique or equivalent) so zh-HK is listed, and also replaces IIsoCodeValidator only where the culture would otherwise be rejected — the official docs' composer (replacing both) is acceptable",
+        "If the agent replaces IIsoCodeValidator, it warns that the validator is used for all culture validation in Umbraco, not just the language dropdown; if it keeps the stock validator, it explains why that validator already accepts zh-HK",
+        "The agent does not recommend switching to zh-Hant-HK as a workaround (Umbraco's stock validator rejects it as a custom culture)",
         "The agent does not suggest changing Umbraco:CMS:Global:DefaultUILanguage or adding backoffice translation files as the fix",
         "The agent says a rebuild/restart is needed before the culture appears",
         "If no buildable Umbraco project is available, the agent does not falsely claim to have built it or seen zh-HK in the dropdown"

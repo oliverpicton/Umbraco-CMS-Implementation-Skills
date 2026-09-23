@@ -62,10 +62,38 @@ Relative names like `/da` are valid and are resolved against the current request
 one configuration working across environments. A domain only routes when its culture is **published**
 on that node. When no domain matches, Umbraco renders the default language.
 
+### Existing URLs: keep them, or redirect them
+
+Adding domains to a live site can move pages. If English moves from `/about-us/` to `/en/about-us/`,
+every indexed URL, backlink and bookmark breaks. Umbraco's built-in redirect tracking won't catch
+this, because it only records URL changes caused by publishing, renaming or moving content, not by
+domain changes. Decide before adding domains:
+
+- **Keep the default language at the root (preferred for an existing site).** Give the default culture
+  the bare host and the new language a path: `example.com` → en-US, `example.com/da` → da-DK. Umbraco
+  tries domains longest-first, so `/da/…` resolves as Danish and everything else stays English at its
+  current URL. Nothing needs redirecting.
+- **Move every language under a prefix** (`/en`, `/da`) only when the user wants symmetrical URLs.
+  Then add permanent (301) redirects from each old unprefixed URL to its `/en/` equivalent,
+  excluding `/umbraco` and static files. Use the URL Rewriting Middleware; fetch
+  [URL Rewrites in Umbraco](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/application-code/backend-and-custom-logic/routing/iisrewriterules.md)
+  first. Update canonical tags, the sitemap and `robots.txt` to the new URLs.
+
+A brand-new site has no URLs to preserve, so either layout works.
+
 Domains are **not** part of a package manifest. Configure them in the backoffice or MCP, or in code
 with `IDomainService.UpdateDomainsAsync(contentKey, new DomainsUpdateModel { Domains = [...] })`,
 which **replaces** all of a node's domains. Fetch the docs for that service before writing code
 against it.
+
+## Publishing variants from code
+
+Editors publish each culture separately, and a culture that was never published isn't routed. When a
+migration, import or seeding job publishes variant content, name the cultures explicitly
+(`["en-US", "da-DK"]`, or each node's `AvailableCultures`). Don't pass `"*"`: on a node that is
+**already published**, a branch publish with `"*"` republishes the **default culture only**, so new
+Danish edits silently stay unpublished. (On a never-published node, `"*"` does publish every culture,
+which is why it looks fine the first time.)
 
 ## Note: a root per market
 
