@@ -38,11 +38,26 @@ public class BlankSiteFixture
         // that query — the content preconditions — sees an empty site and fails. Front-end routing goes
         // through the published cache instead and is already consistent, which is exactly why the
         // symptom looked so selective: every rendering test passed while the preconditions failed.
+        //
+        // "Any child is queryable" is not enough: several examples seed and publish on the same startup
+        // signal, and the index can answer with some of their children before others. So wait for every
+        // Document Type alias the manifests DECLARE at root — exactly what the preconditions then assert.
+        // If one never becomes queryable, this times out rather than passing on a partial index.
+        string[] declaredAliases = ContentPreconditions.DeclaredRequirements(ContentPreconditions.BlankHost)
+            .Where(requirement => requirement.Kind == "documentTypeAliasAtRoot")
+            .Select(requirement => requirement.Value)
+            .ToArray();
+
         await Factory.WaitUntilInstalledAsync(
             Client,
-            root => root.TryGetProperty("total", out System.Text.Json.JsonElement total)
-                    && total.GetInt32() > 0,
-            url: "/umbraco/delivery/api/v2/content?fetch=children:/&take=1");
+            root =>
+            {
+                string?[] indexed = root.GetProperty("items").EnumerateArray()
+                    .Select(item => item.GetProperty("contentType").GetString())
+                    .ToArray();
+                return indexed.Length > 0 && declaredAliases.All(indexed.Contains);
+            },
+            url: "/umbraco/delivery/api/v2/content?fetch=children:/&take=100");
     }
 
     [OneTimeTearDown]

@@ -486,3 +486,7 @@ umbraco-package-schema.json
 # _ViewImports.cshtml is authored by us, so keep that and ignore the rest.
 /Views/*.cshtml
 !/Views/_ViewImports.cshtml
+
+# Partial views likewise written at RUNTIME — from a package's <PartialViews><View path="…"> entries
+# (umbraco-multilingual installs its languageSwitcher/hreflangLinks partials this way).
+/Views/Partials/

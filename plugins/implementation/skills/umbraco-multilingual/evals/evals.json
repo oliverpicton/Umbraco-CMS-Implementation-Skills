@@ -1,0 +1,76 @@
+{
+  "skill_name": "umbraco-multilingual",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We have an English-only Umbraco 17.5 site (Razor views, en-US is the only language). We're launching in Denmark next month and need every page available in Danish too, on the same domain as example.com/da, with English at example.com/en. Editors should be able to leave a Danish field blank and have English show instead. We also need a language switcher in the header and proper hreflang tags for SEO. Set it up.",
+      "expected_output": "The agent adds da-DK as a language with fallback to en-US, enables vary by culture on the Document Types (keeping shared values invariant), configures Culture and Hostnames on the site root with a domain per culture, renders values with Fallback.ToLanguage, and adds the skill's language switcher and hreflang partials, explaining what the package import cannot do.",
+      "files": [],
+      "expectations": [
+        "The agent adds da-DK as a language and sets its fallback language to en-US (or explains exactly where to set it)",
+        "The agent explains that importing languages from a package manifest does not set fallback, mandatory or default, and that those must be configured separately",
+        "The agent enables 'Allow vary by culture' on the relevant Document Types and advises keeping values that are the same in every language (e.g. SKUs, dates) as shared/invariant properties",
+        "The agent configures a domain per culture on the site root via Culture and Hostnames (e.g. example.com/en → en-US and example.com/da → da-DK, or relative /en and /da)",
+        "Blank Danish values fall back to English via Fallback.ToLanguage (or equivalent), not via a `??` on Value<string>, which never fires because blank values are empty strings",
+        "The language switcher links to the current page in other published cultures, compares cultures without ToLower() (case-insensitive comparison), and handles a missing home node or untranslated page without throwing",
+        "hreflang is emitted as <link rel=\"alternate\" hreflang> in <head> with absolute URLs and an x-default, not only as an attribute on switcher links",
+        "The agent prefers the Umbraco Developer MCP for backoffice steps and otherwise walks through them manually, rather than skipping them",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have built or verified the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our Umbraco 17 site has English and German. Pages render German correctly at /de/, but a JSON endpoint in our custom API controller that returns the page title always returns the English title even when called from the German site with ?culture=de-DE. Same problem in a nightly Hangfire job that builds a German product feed. Why, and how do we fix it?",
+      "expected_output": "The agent explains that outside a routed front-end request no variation context is set, so IPublishedContent resolves to the default language, and fixes it by setting IVariationContextAccessor.VariationContext = new VariationContext(culture) or passing the culture to Value/Url explicitly.",
+      "files": [],
+      "expectations": [
+        "The agent explains that API controllers and background jobs are culture-less contexts where IPublishedContent resolves to the default language",
+        "The fix sets IVariationContextAccessor.VariationContext to a new VariationContext(culture), or passes the culture explicitly to Value(alias, culture) / Url(culture)",
+        "The culture comes from the request or job input (e.g. the culture parameter), not a hardcoded culture list",
+        "The agent does not suggest changing Umbraco:CMS:Global:DefaultUILanguage or the default language as the fix",
+        "The agent does not lowercase the culture code (e.g. keeps de-DE, compares case-insensitively)",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have verified the fix"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "On our bilingual (English/Danish) Umbraco 17 site we hardcoded button text like 'Read more' and 'Contact us' in the Razor views, so the Danish pages still show English buttons. Also, our developer wrote `@(Model.Value<string>(\"subtitle\") ?? Model.Value<string>(\"subtitle\", \"en-US\"))` to fall back to English when the Danish subtitle is empty, but Danish pages just show nothing. Fix both.",
+      "expected_output": "The agent moves the fixed labels into Dictionary items rendered with Umbraco.GetDictionaryValue / GetDictionaryValueOrDefault, and explains that Value<string> returns an empty string rather than null so the ?? never fires, replacing it with Fallback.ToLanguage (with the Danish language's fallback set to English) or an IsNullOrWhiteSpace check.",
+      "files": [],
+      "expectations": [
+        "The agent moves hardcoded UI labels into Dictionary items (Translation → Dictionary) with a value per language",
+        "Views render them with Umbraco.GetDictionaryValue or GetDictionaryValueOrDefault",
+        "The agent explains that Value<string> returns an empty string, not null, for a blank value, so the `??` never falls back",
+        "The fix uses Fallback.ToLanguage (and notes the Danish language's fallback must be set to English) or string.IsNullOrWhiteSpace",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have verified the change"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Our Umbraco 17 install is headless: a Next.js front end reads everything from the Content Delivery API. We've added French as a second language and translated the content in the backoffice. How does the Next.js app get the French versions, and how should we handle the language switcher and hreflang?",
+      "expected_output": "The agent explains that the Delivery API selects the variant via the Accept-Language header, that the front end should carry the language in its own routing and send it on every call, and that the switcher and hreflang tags are built in the front end from the cultures the item is published in, rather than using Razor partials.",
+      "files": [],
+      "expectations": [
+        "The agent explains the Delivery API returns the French variant when the request sends Accept-Language: fr-FR (or the site's French ISO code)",
+        "The agent recommends carrying the language in the front end's routing (e.g. /[lang]/...) and sending that culture on every Delivery API call",
+        "The agent says the switcher and hreflang are built in the Next.js app, and does not tell the user to add Razor partials to a headless site",
+        "The agent notes that only cultures the item is published in should be linked in the switcher or hreflang",
+        "If no buildable project is available, the agent does not falsely claim to have run the front end or the API"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "We need to add Chinese (Hong Kong), zh-HK, as a content language on our Umbraco 17.5 site running on Linux, but it doesn't appear in the dropdown under Settings → Languages → Create. What's going on and how do we fix it?",
+      "expected_output": "The agent explains that with .NET app-local ICU some valid BCP 47 cultures are reported as custom cultures and rejected by Umbraco's IIsoCodeValidator, and adds the documented composer replacing IIsoCodeValidator and ICultureService for zh-HK, with the caveat that the validator affects all culture validation.",
+      "files": [],
+      "expectations": [
+        "The agent explains that zh-HK is filtered out because .NET/ICU reports it as a user custom culture (or doesn't enumerate it), and Umbraco's IIsoCodeValidator rejects it",
+        "The agent adds a composer that replaces IIsoCodeValidator and ICultureService (e.g. via AddUnique) to allow zh-HK, following the official docs",
+        "The agent warns that the replaced validator is used for all culture validation in Umbraco, not just the language dropdown",
+        "The agent does not suggest changing Umbraco:CMS:Global:DefaultUILanguage or adding backoffice translation files as the fix",
+        "The agent says a rebuild/restart is needed before the culture appears",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have built it or seen zh-HK in the dropdown"
+      ]
+    }
+  ]
+}
