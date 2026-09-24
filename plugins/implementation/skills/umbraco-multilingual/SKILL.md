@@ -1,15 +1,16 @@
 ---
 name: umbraco-multilingual
-description: >
-  Make an Umbraco 17+ site multilingual: languages with fallback, vary-by-culture Document Types,
-  a domain per culture, rendering variant values, dictionary items, a language switcher and hreflang
-  tags, plus adding cultures missing from the Languages dropdown. Use this whenever the user asks to
-  "make the site multilingual", "add a language", "translate the site", "add Danish/French/… content",
-  "set up language variants", "vary by culture", "configure culture and hostnames", "add a language
-  switcher", "add hreflang tags", "use dictionary items", "fix content showing in the wrong language",
-  or "a culture is missing from the language dropdown".
-  SKIP: non-Umbraco projects, Umbraco < 17, and translating the backoffice UI itself (that is
-  backoffice localization, not content languages).
+description: |
+  Use this skill for any Umbraco 17+ work where content exists in, or must be served in, more than one language (culture). That covers setup and debugging:
+
+  - Adding a language or market: languages, fallback, mandatory cultures, vary-by-culture Document Types, Culture and Hostnames (/de, domain per country) without breaking existing URLs.
+  - Wrong or empty language on the front end: blank translated fields that should fall back to another language, or a controller, SurfaceController, service or background job returning English instead of the visitor's culture.
+  - Translating hardcoded view text (button labels, UI strings) with dictionary items.
+  - A language switcher and hreflang tags.
+  - Migrations or packages that import languages or dictionary items, then publish cultures that don't go live.
+  - A culture (e.g. zh-HK) missing from the Languages dropdown, especially on Linux or Azure.
+
+  Skip it for non-Umbraco apps, Umbraco 13 and earlier, and translating the backoffice UI or extension labels.
 ---
 
 # Multilingual site
