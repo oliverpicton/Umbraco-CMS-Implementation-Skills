@@ -1,16 +1,17 @@
 ---
 name: umbraco-multilingual
-description: |
-  Use this skill for any Umbraco 17+ work where content exists in, or must be served in, more than one language (culture). That covers setup and debugging:
-
-  - Adding a language or market: languages, fallback, mandatory cultures, vary-by-culture Document Types, Culture and Hostnames (/de, domain per country) without breaking existing URLs.
-  - Wrong or empty language on the front end: blank translated fields that should fall back to another language, or a controller, SurfaceController, service or background job returning English instead of the visitor's culture.
-  - Translating hardcoded view text (button labels, UI strings) with dictionary items.
-  - A language switcher and hreflang tags.
-  - Migrations or packages that import languages or dictionary items, then publish cultures that don't go live.
-  - A culture (e.g. zh-HK) missing from the Languages dropdown, especially on Linux or Azure.
-
-  Skip it for non-Umbraco apps, Umbraco 13 and earlier, and translating the backoffice UI or extension labels.
+description: >
+  Use for any Umbraco 17+ work where content exists in, or must be served in, more than one
+  language (culture), including headless (Content Delivery API) sites. Covers setup and debugging:
+  adding a language or market (languages, fallback, vary-by-culture Document Types, Culture and
+  Hostnames such as /de or a domain per country) without breaking existing URLs; blank translated
+  fields that should fall back to another language; a controller, SurfaceController, background
+  job or Delivery API call returning the wrong culture; translating hardcoded view text (button
+  labels, UI strings) with dictionary items; a language switcher and hreflang tags; migrations or
+  packages whose imported languages, dictionary items or cultures don't go live; a culture such as
+  zh-HK missing from the Languages dropdown, especially on Linux or Azure. SKIP: non-Umbraco apps,
+  Umbraco 13 and earlier, translating the backoffice UI or extension labels, and building the
+  headless front end itself.
 ---
 
 # Multilingual site
@@ -37,8 +38,10 @@ matches decides which one renders. Build it in this order, since each step depen
   through the backoffice one step at a time; the order is in
   [languages-and-variants.md](references/languages-and-variants.md). Don't skip a step because the
   MCP is missing.
-- **Headless / Delivery API sites** skip step 5's Razor partials: the front end picks the culture with
-  the `Accept-Language` header (see [rendering-variants.md](references/rendering-variants.md)).
+- **Headless / Delivery API sites: backend only.** Steps 1–4 apply unchanged (languages, variants,
+  domains, dictionary), and the front end picks the culture with the `Accept-Language` header (see
+  [rendering-variants.md](references/rendering-variants.md)). Skip step 5's Razor partials. Building
+  the front end itself (its routing, switcher component, hreflang or i18n library) is out of scope.
 
 ## Version compatibility
 
