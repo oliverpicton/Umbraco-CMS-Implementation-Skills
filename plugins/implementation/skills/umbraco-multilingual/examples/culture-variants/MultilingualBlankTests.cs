@@ -1,10 +1,5 @@
 using System.Net;
-using System.Net.Http.Headers;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Cms.Core.Models;
-using Umbraco.Cms.Core.Services;
 
 namespace Umbraco_CMS.Skills.TestHost.Blank;
 
@@ -141,28 +136,49 @@ public class MultilingualBlankTests
             "a single-culture page must not emit hreflang alternates");
     }
 
-    // ---------------------------------------------------------------- headless
+    // ---------------------------------------------------------------- block level variance
+
+    /// <summary>"title|code" for each block in the given list (#blocks or #blocks-fallback), in order.</summary>
+    private static List<string> Blocks(string body, string listId)
+    {
+        Match list = Regex.Match(body, $"""<ul id="{listId}">(.*?)</ul>""", RegexOptions.Singleline);
+        Assert.That(list.Success, Is.True, $"no <ul id=\"{listId}\"> in: {Excerpt(body)}");
+        return Regex.Matches(list.Groups[1].Value, """<li class="block">(.*?)</li>""", RegexOptions.Singleline)
+            .Select(m => WebUtility.HtmlDecode(m.Groups[1].Value).Trim())
+            .ToList();
+    }
 
     [Test]
-    public async Task Delivery_api_returns_the_culture_named_by_accept_language()
+    public async Task Invariant_block_list_renders_every_exposed_block_in_layout_order()
     {
-        IContentService contentService = BlankSiteFixture.Factory.Services.GetRequiredService<IContentService>();
-        IContent root = contentService.GetRootContent().OrderBy(c => c.SortOrder).First();
-        IContent about = contentService
-            .GetPagedChildren(root.Id, 0, 100, out _, propertyAliases: null, filter: null, ordering: null)
-            .Where(c => c.GetCultureName("en-US") == "Multilingual")
-            .SelectMany(section => contentService.GetPagedChildren(section.Id, 0, 100, out _,
-                propertyAliases: null, filter: null, ordering: null))
-            .Single(c => c.GetCultureName("en-US") == "About us");
+        Assert.That(Blocks(await GetOkAsync("/en/about-us/"), "blocks"),
+            Is.EqualTo(new[] { "Block A|A-1", "Block B|B-2" }),
+            "both blocks are exposed in English, and the shared layout fixes their order");
+    }
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"/umbraco/delivery/api/v2/content/item/{about.Key}");
-        request.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("da-DK"));
-        HttpResponseMessage response = await Client.SendAsync(request);
-        string json = await response.Content.ReadAsStringAsync();
+    [Test]
+    public async Task Block_content_renders_in_the_request_culture()
+    {
+        Assert.That(Blocks(await GetOkAsync("/da/om-os/"), "blocks"), Has.Member("Blok A|A-1"),
+            "block A's blockTitle varies by culture, so the Danish page must render the Danish title "
+            + "while the invariant blockCode is shared");
+    }
 
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK), Excerpt(json));
-        using JsonDocument doc = JsonDocument.Parse(json);
-        Assert.That(doc.RootElement.GetProperty("properties").GetProperty("title").GetString(),
-            Is.EqualTo("Om os titel"));
+    [Test]
+    public async Task Unexposed_block_is_omitted_without_fallback()
+    {
+        Assert.That(Blocks(await GetOkAsync("/da/om-os/"), "blocks"), Is.EqualTo(new[] { "Blok A|A-1" }),
+            "block B is not exposed in da-DK, so a plain Value<BlockListModel>(\"blocks\") must omit it");
+    }
+
+    /// <summary>
+    /// Umbraco 17.4+: with Fallback.ToLanguage, an unexposed block resolves through da-DK's fallback
+    /// language (en-US in this fixture) and renders in that culture, still in layout order.
+    /// </summary>
+    [Test]
+    public async Task Unexposed_block_falls_back_to_the_fallback_language_when_asked()
+    {
+        Assert.That(Blocks(await GetOkAsync("/da/om-os/"), "blocks-fallback"),
+            Is.EqualTo(new[] { "Blok A|A-1", "Block B|B-2" }));
     }
 }

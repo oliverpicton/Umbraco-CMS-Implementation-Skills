@@ -1,17 +1,17 @@
 ---
 name: umbraco-multilingual
 description: >
-  Use for any Umbraco 17+ work where content exists in, or must be served in, more than one
-  language (culture), including headless (Content Delivery API) sites. Covers setup and debugging:
-  adding a language or market (languages, fallback, vary-by-culture Document Types, Culture and
-  Hostnames such as /de or a domain per country) without breaking existing URLs; blank translated
-  fields that should fall back to another language; a controller, SurfaceController, background
-  job or Delivery API call returning the wrong culture; translating hardcoded view text (button
-  labels, UI strings) with dictionary items; a language switcher and hreflang tags; migrations or
-  packages whose imported languages, dictionary items or cultures don't go live; a culture such as
-  zh-HK missing from the Languages dropdown, especially on Linux or Azure. SKIP: non-Umbraco apps,
-  Umbraco 13 and earlier, translating the backoffice UI or extension labels, and building the
-  headless front end itself.
+  Use for any Umbraco 17+ work where content exists in more than one language (culture). Covers
+  setup and debugging: adding a language or market (languages, fallback, vary-by-culture Document
+  Types, Culture and Hostnames such as /de or a domain per country) without breaking existing
+  URLs; translating Block List, Block Grid or rich text blocks per language while keeping the same
+  blocks and order (block level variance); blank translated fields that should fall back to
+  another language; a controller, SurfaceController or background job returning the wrong culture;
+  translating hardcoded view text (button labels, UI strings) with dictionary items; a language
+  switcher and hreflang tags; migrations or packages whose imported languages, dictionary items or
+  cultures don't go live; a culture such as zh-HK missing from the Languages dropdown, especially
+  on Linux or Azure. SKIP: non-Umbraco apps, Umbraco 13 and earlier, translating the backoffice UI
+  or extension labels, and headless / Content Delivery API front ends.
 ---
 
 # Multilingual site
@@ -23,7 +23,7 @@ matches decides which one renders. Build it in this order, since each step depen
 | # | Step | Reference | Ships |
 |---|---|---|---|
 | 1 | Languages: default, mandatory, fallback | [languages-and-variants.md](references/languages-and-variants.md) | [`assets/multilingual-package.xml`](assets/multilingual-package.xml) |
-| 2 | Vary Document Types and properties by culture | [languages-and-variants.md](references/languages-and-variants.md) | — |
+| 2 | Vary Document Types, properties and blocks by culture | [languages-and-variants.md](references/languages-and-variants.md) | — |
 | 3 | Culture and Hostnames: a domain per culture | [languages-and-variants.md](references/languages-and-variants.md) | — |
 | 4 | Render variant values, fallback, dictionary, culture outside a request | [rendering-variants.md](references/rendering-variants.md) | — |
 | 5 | Language switcher and hreflang | [language-switcher-and-seo.md](references/language-switcher-and-seo.md) | [`languageSwitcher.cshtml`](assets/languageSwitcher.cshtml), [`hreflangLinks.cshtml`](assets/hreflangLinks.cshtml) |
@@ -38,10 +38,8 @@ matches decides which one renders. Build it in this order, since each step depen
   through the backoffice one step at a time; the order is in
   [languages-and-variants.md](references/languages-and-variants.md). Don't skip a step because the
   MCP is missing.
-- **Headless / Delivery API sites: backend only.** Steps 1–4 apply unchanged (languages, variants,
-  domains, dictionary), and the front end picks the culture with the `Accept-Language` header (see
-  [rendering-variants.md](references/rendering-variants.md)). Skip step 5's Razor partials. Building
-  the front end itself (its routing, switcher component, hreflang or i18n library) is out of scope.
+- **Headless / Content Delivery API front ends are out of scope for now.** This skill covers Razor
+  sites.
 
 ## Version compatibility
 
@@ -58,6 +56,9 @@ language/domain APIs; don't apply this skill there.
   so adding a language needs no code change.
 - **Set a fallback per language and decide mandatory deliberately.** A mandatory language blocks
   publishing every other culture of a node until it has content.
+- **Translate blocks with block level variance, not a varying block property.** Keep the Block
+  List/Grid property invariant and make its element types vary, so every language shares the same
+  blocks and order. A varying block property gives each language its own list, and the lists drift.
 - **Vary only what differs.** Shared values (SKUs, dates, images with no text) belong on invariant
   properties, or editors enter them once per language and they drift apart.
 - **`Value<string>` returns `""`, not `null`, for a blank value.** A `?? fallback` never fires; use
@@ -72,5 +73,5 @@ language/domain APIs; don't apply this skill there.
 Assertions live in [`evals/evals.json`](evals/evals.json); run them with `umbraco-skill-evaluator`.
 The runtime gate covers both gated parts:
 - `examples/culture-variants/` on the blank host (languages, domains, fallback, dictionary, switcher,
-  hreflang, Delivery API);
+  hreflang, block level variance);
 - `examples/additional-cultures/` on the Clean host (the composer).

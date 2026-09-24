@@ -58,7 +58,7 @@ public class MyService(IVariationContextAccessor variationContextAccessor)
 ```
 
 Or pass the culture to each call: `content.Value("title", culture)`, `content.Url(culture)`. Take the
-culture from the request (route, domain, `Accept-Language`), never from a hardcoded list.
+culture from the request (route, domain, query string), never from a hardcoded list.
 
 ## Dictionary items: fixed UI strings
 
@@ -76,19 +76,30 @@ use dictionary keys as the option values and translate them at render time (the 
 loop). The package manifest in [`assets/`](../assets/multilingual-package.xml) shows the dictionary
 XML shape.
 
-## Headless: the Delivery API
+## Blocks
 
-The Delivery API picks the variant from the `Accept-Language` request header (e.g.
-`Accept-Language: da-DK`) when querying by id. When querying by path, the domain in the path already
-implies the culture, but a present `Accept-Language` header still takes precedence. A headless front
-end:
-- keeps the language in its own routing (for example `/[lang]/…`);
-- sends that culture on every Delivery API call;
-- builds its switcher and hreflang tags from the languages the item is published in.
+With block level variance (an invariant Block List/Grid property whose element types vary; see
+[languages-and-variants.md](languages-and-variants.md#blocks-same-blocks-translated-content)),
+rendering needs no filtering or culture code:
 
-Fetch the [Content Delivery API docs](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/headless-and-apis/content-delivery-api.md)
-for the exact endpoints before writing the client. Don't ship this skill's Razor partials to a
-headless site.
+```cshtml
+@using Umbraco.Cms.Core.Models.Blocks
+@foreach (var block in Model.Value<BlockListModel>("blocks") ?? BlockListModel.Empty)
+{
+    <h2>@block.Content.Value("title")</h2>  @* already the request's culture *@
+}
+```
+
+- Blocks **not exposed** in the request's culture are left out.
+- `block.Content.Value(...)` returns the request's culture, and shared (invariant) block properties
+  return their single value.
+- **Language fallback for blocks (Umbraco 17.4+):** pass a fallback to show a block that isn't exposed
+  in this language, rendered in the fallback language, in its usual position:
+  `Model.Value<BlockListModel>("blocks", fallback: Fallback.ToLanguage)`. Without the fallback
+  argument it stays hidden. Use it only when "show the English block until it's translated" is what
+  the site wants.
+- In culture-less contexts (controllers, jobs), set the variation context first, as above. Blocks
+  follow it.
 
 ## Done
 

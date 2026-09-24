@@ -48,15 +48,16 @@
     },
     {
       "id": 4,
-      "prompt": "Our Umbraco 17 install is headless: a Next.js front end reads everything from the Content Delivery API. We've added French as a second language and translated the content in the backoffice. How does the Next.js app get the French versions, and how should we handle the language switcher and hreflang?",
-      "expected_output": "The agent explains that the Delivery API selects the variant via the Accept-Language header, that the front end should carry the language in its own routing and send it on every call, and that the switcher and hreflang tags are built in the front end from the cultures the item is published in, rather than using Razor partials.",
+      "prompt": "Our Umbraco 17.5 Razor site has English and Danish. The homepage content is a Block List property called 'sections' and we set that property to vary by culture, so every language has its own list. Now the Danish homepage keeps drifting: blocks are missing, in a different order, and marketing edits the English blocks and forgets Danish. We want the same blocks in the same order in both languages with only the text translated, and a couple of promo blocks should stay English-only. How do we set this up, and how do we migrate what we have without losing the Danish text?",
+      "expected_output": "The agent recommends block level variance: keep the document type variant, make the 'sections' Block List property invariant (shared), and make the element types and their text properties vary by culture. It explains unexposed blocks (how a block stays English-only and is omitted from Danish output), that structure and order are shared across languages, and that rendering needs no filtering code. It warns that switching the property from varying to shared keeps only the default language's list, so the Danish text must be captured and re-entered as block variants, rehearsed on a copy of the database.",
       "files": [],
       "expectations": [
-        "The agent explains the Delivery API returns the French variant when the request sends Accept-Language: fr-FR (or the site's French ISO code)",
-        "The agent recommends carrying the language in the front end's routing (e.g. /[lang]/...) and sending that culture on every Delivery API call",
-        "The agent says the switcher and hreflang are built in the Next.js app, and does not tell the user to add Razor partials to a headless site",
-        "The agent notes that only cultures the item is published in should be linked in the switcher or hreflang",
-        "If no buildable project is available, the agent does not falsely claim to have run the front end or the API"
+        "The agent recommends block level variance: the document type varies, the 'sections' Block List property is made invariant (shared across cultures), and the block element types (and their text properties) vary by culture",
+        "The agent explains that with block level variance the block structure and order are shared across languages, so blocks can no longer drift between English and Danish",
+        "The agent explains that a block can stay English-only by not exposing it in Danish (the 'unexposed' state), and that unexposed blocks are omitted from the Danish output",
+        "The agent says the Razor view needs no filtering or culture code: Model.Value<BlockListModel>(...) already omits unexposed blocks and returns the request culture's values (optionally mentioning Fallback.ToLanguage to show untranslated blocks)",
+        "The agent warns that switching the property from varying to shared keeps only the default language's block list and discards the Danish lists, so the Danish text must be captured first and re-entered as Danish block variants, rehearsed on a copy of the database",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have run the migration or verified the output"
       ]
     },
     {

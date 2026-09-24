@@ -36,8 +36,8 @@ If a language the user needs is missing from the dropdown, see
 
 ## 2. Vary by culture
 
-- **Document Type:** Settings tab → *Allow vary by culture*. Element Types used in Block List/Grid
-  need it too if their content differs per language.
+- **Document Type:** Settings tab → *Allow vary by culture*. For Element Types used in blocks, see
+  [Blocks](#blocks-same-blocks-translated-content) below.
 - **Property:** each property on a varying type is variant by default. Mark it *Shared across
   cultures* (invariant) when the value is the same in every language, such as SKUs, dates, toggles and
   images with no text.
@@ -47,6 +47,38 @@ Switching an existing property to vary by culture copies its current value into 
 language**. Other languages start empty, so plan fallback. The reverse is destructive: switching a
 property back to shared keeps **only the default language's** value and discards every other
 language's. Warn before doing that, and try both on a copy of the database for large sites.
+
+### Blocks: same blocks, translated content
+
+Fetch [Block Level Variance](https://docs.umbraco.com/umbraco-cms/model-your-content/property-editors/built-in-umbraco-property-editors/block-editor/block-level-variance.md)
+first. Block List, Block Grid and Rich Text blocks can vary in two ways:
+
+| | **Block level variance** (default) | Block property varies by culture |
+|---|---|---|
+| Configure | Document Type varies; the **block property does not**; its **Element Types (and their text properties) do** | The block property itself varies |
+| Structure | One shared list: same blocks, same order in every language | A separate list per language |
+| Best for | The same page layout in every language, with translated content | Markets whose pages genuinely differ block by block |
+| Risk | — | Lists drift apart: missing and reordered blocks |
+
+Default to block level variance whenever pages should have the same blocks. How it behaves:
+
+- **Unexposed blocks.** A block added in one language appears in the others dimmed ("unexposed")
+  until an editor edits it there. Unexposed blocks are left out of that language's published output,
+  which is how a block stays English-only.
+- **Structure is global.** Adding, removing or reordering blocks in one language changes every
+  language once published. Publishing a language merges only that language's block content.
+- **Invariant properties inside a variant block** (e.g. a code, image or toggle marked *Shared across
+  cultures*) are shared, so an update shows in every published language.
+- **Rich Text blocks** work the same way. The markup stays shared, and only the block content varies.
+- **Who can change structure.** By default, editors who can only edit non-default languages can't
+  change the shared structure. Set `Umbraco:CMS:Content:AllowEditInvariantFromNonDefault` to `true`
+  to let them.
+- **Migrating from a varying block property** means switching the property to shared, and that keeps
+  **only the default language's** block list: every other language's blocks are discarded (see the
+  warning above). Plan the translations back in as block variants, and rehearse on a copy of the
+  database.
+
+Rendering needs no extra code; see [rendering-variants.md](rendering-variants.md#blocks).
 
 ## 3. Culture and Hostnames
 

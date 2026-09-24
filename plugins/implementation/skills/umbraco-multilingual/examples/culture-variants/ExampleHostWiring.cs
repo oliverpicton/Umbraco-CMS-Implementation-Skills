@@ -4,9 +4,11 @@ using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Models.Blocks;
 using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.PublishedCache;
+using Umbraco.Cms.Core.Serialization;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Skills.Examples.Fixtures;
 
@@ -21,7 +23,9 @@ namespace Umbraco.Skills.Examples.Multilingual.CultureVariants;
 ///   2. create culture-variant content with per-culture names (so per-culture URL segments) and values;
 ///   3. assign a domain per culture (Culture and Hostnames) — relative "/en" and "/da", so they work on
 ///      whatever host the test server answers on;
-///   4. publish each node in exactly the cultures it has.
+///   4. publish each node in exactly the cultures it has;
+///   5. give the About-us page block level variance: an INVARIANT Block List whose element type varies
+///      by culture — block A exposed in both languages, block B exposed in English only.
 ///
 /// The subtree hangs under site 2's SINGLE shared root rather than being a root of its own — a second
 /// root would change every other example's URLs. The domains sit on the subtree's top node, so only
@@ -39,12 +43,18 @@ public class MultilingualContentSeeder : INotificationAsyncHandler<UmbracoApplic
     public const string Danish = "da-DK";
     private const string PageType = "multilingualPage";
 
+    // Must match ExampleFixtureContent.xml, which defines the element type with this key.
+    private static readonly Guid BlockElementTypeKey = new("e3b5a8d1-6c2f-4a79-9d04-1f8b2c7e5a60");
+    private static readonly Guid BlockAKey = new("b10c0000-0000-4000-8000-00000000000a");
+    private static readonly Guid BlockBKey = new("b10c0000-0000-4000-8000-00000000000b");
+
     private readonly IContentService _contentService;
     private readonly IContentTypeService _contentTypeService;
     private readonly ILanguageService _languageService;
     private readonly IDomainService _domainService;
     private readonly IDocumentUrlService _documentUrlService;
     private readonly IDatabaseCacheRebuilder _cacheRebuilder;
+    private readonly IJsonSerializer _jsonSerializer;
     private readonly ILogger<MultilingualContentSeeder> _logger;
 
     public MultilingualContentSeeder(
@@ -54,6 +64,7 @@ public class MultilingualContentSeeder : INotificationAsyncHandler<UmbracoApplic
         IDomainService domainService,
         IDocumentUrlService documentUrlService,
         IDatabaseCacheRebuilder cacheRebuilder,
+        IJsonSerializer jsonSerializer,
         ILogger<MultilingualContentSeeder> logger)
     {
         _contentService = contentService;
@@ -62,6 +73,7 @@ public class MultilingualContentSeeder : INotificationAsyncHandler<UmbracoApplic
         _domainService = domainService;
         _documentUrlService = documentUrlService;
         _cacheRebuilder = cacheRebuilder;
+        _jsonSerializer = jsonSerializer;
         _logger = logger;
     }
 
@@ -92,6 +104,10 @@ public class MultilingualContentSeeder : INotificationAsyncHandler<UmbracoApplic
         IContent englishOnly = EnsureVariant(section, "English only", null,
             ("title", "English only title", null));
 
+        // The blocks property is invariant (no culture); per-culture content lives inside the blocks.
+        about.SetValue("blocks", _jsonSerializer.Serialize(BuildVariantBlocks()));
+        _contentService.Save(about);
+
         foreach (IContent node in new[] { section, about, fallback, englishOnly })
         {
             PublishResult result = _contentService.Publish(node, node.AvailableCultures.ToArray());
@@ -120,6 +136,41 @@ public class MultilingualContentSeeder : INotificationAsyncHandler<UmbracoApplic
         await _documentUrlService.RebuildAllUrlsAsync();
         await _cacheRebuilder.RebuildAsync(useBackgroundThread: false);
     }
+
+    /// <summary>
+    /// Block A has a title in both languages and is exposed in both; block B has only an English title
+    /// and is exposed only in English, so it is "unexposed" in Danish. blockCode is invariant.
+    /// </summary>
+    private static BlockListValue BuildVariantBlocks() =>
+        new([new BlockListLayoutItem(BlockAKey), new BlockListLayoutItem(BlockBKey)])
+        {
+            ContentData =
+            [
+                new BlockItemData(BlockAKey, BlockElementTypeKey, "multilingualBlock")
+                {
+                    Values =
+                    [
+                        new BlockPropertyValue { Alias = "blockTitle", Value = "Block A", Culture = English },
+                        new BlockPropertyValue { Alias = "blockTitle", Value = "Blok A", Culture = Danish },
+                        new BlockPropertyValue { Alias = "blockCode", Value = "A-1" },
+                    ],
+                },
+                new BlockItemData(BlockBKey, BlockElementTypeKey, "multilingualBlock")
+                {
+                    Values =
+                    [
+                        new BlockPropertyValue { Alias = "blockTitle", Value = "Block B", Culture = English },
+                        new BlockPropertyValue { Alias = "blockCode", Value = "B-2" },
+                    ],
+                },
+            ],
+            Expose =
+            [
+                new BlockItemVariation(BlockAKey, English, null),
+                new BlockItemVariation(BlockAKey, Danish, null),
+                new BlockItemVariation(BlockBKey, English, null),
+            ],
+        };
 
     private async Task EnsureDanishFallsBackToEnglishAsync()
     {
