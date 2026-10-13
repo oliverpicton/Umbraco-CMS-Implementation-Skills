@@ -110,83 +110,81 @@ Grade code expectations from the files under `outputs/project/`, not from `answe
 
 ## Results
 
-Run on 2026-10-13 with the method above: all five evals, with and without the skill, one run per
-cell, as Claude Code subagents on `claude-haiku-5-5` and `claude-sonnet-5-5`, graded by Haiku 5.5.
-Conditions that applied to both sides equally: no .NET SDK (nothing was built), no Umbraco instance
-or MCP, and `docs.umbraco.com` blocked by the sandbox's egress proxy, so every run worked from the
-skill text (with-skill side) or its own knowledge (baseline). No run modified the
-`Directory.Packages.props` copy. Read single runs as a range, not a point: PR #20 saw baseline
-scores move between rounds on the same prompts.
+Run on 2026-10-13 with the method above: all five evals, with and without the skill, as Claude Code
+subagents on `claude-haiku-5-5` and `claude-sonnet-5-5`, one run per cell, graded by Haiku 5.5.
+Four rounds were run; the skill and two eval details were fixed between rounds, and the table is the
+final round. Conditions that applied to both sides equally: no .NET SDK (nothing was built), no
+Umbraco instance or MCP, and `docs.umbraco.com` blocked by the sandbox's egress proxy, so every run
+worked from the skill text (with-skill side) or its own knowledge (baseline). None of the 80 runs
+modified the `Directory.Packages.props` copy. Read single runs as a range, not a point: baseline
+scores on the same prompt moved by one or two expectations between rounds.
 
-### Haiku 5.5
+### Final round
 
-| Eval | With skill | Baseline |
-|---|---|---|
-| 1 `danish-launch-setup` | 8/9 | 6/9 |
-| 2 `culture-less-contexts` | 6/6 | 6/6 |
-| 3 `scripted-launch-diagnosis` | 5/6 (iteration 2: 6/6) | 5/6 |
-| 4 `block-level-variance` | 6/6 | 3/6 |
-| 5 `missing-culture-zh-hk` | 7/7 | 4/7 |
-| **Total** | **32/34 (94%)** | **24/34 (71%)** |
-| Mean tokens / wall time per run | 90k / 92 s | 81k / 101 s |
+| Eval | Haiku with skill | Haiku baseline | Sonnet with skill | Sonnet baseline |
+|---|---|---|---|---|
+| 1. Danish launch setup (languages, fallback, domains, switcher, hreflang) | 9/9 | 8/9 | 9/9 | 8/9 |
+| 2. Culture-less contexts (API controller, background job) | 6/6 | 6/6 | 6/6 | 6/6 |
+| 3. Scripted launch diagnosis (manifest casing, `"*"` publish, fallback, `DefaultUILanguage`) | 6/6 | 5/6 | 6/6 | 5/6 |
+| 4. Block level variance (shared blocks, unexposed blocks, migration) | 6/6 | 3/6 | 6/6 | 5/6 |
+| 5. Missing culture `zh-HK` (composer) | 7/7 | 4/7 | 7/7 | 5/7 |
+| **Mean pass rate** | **100%** (34/34) | **76%** (26/34) | **100%** (34/34) | **85%** (29/34) |
 
-### Sonnet 5.5
+**Haiku 5.5**
 
-| Eval | With skill | Baseline |
-|---|---|---|
-| 1 `danish-launch-setup` | 8/9 | 6/9 |
-| 2 `culture-less-contexts` | 6/6 | 6/6 |
-| 3 `scripted-launch-diagnosis` | 6/6 | 5/6 |
-| 4 `block-level-variance` | 6/6 | 6/6 |
-| 5 `missing-culture-zh-hk` | 7/7 | 5/7 |
-| **Total** | **33/34 (97%)** | **28/34 (82%)** |
-| Mean tokens / wall time per run | 75k / 72 s | 72k / 114 s |
+- The skill reached 100% against 76% without it, at about the same cost: 83k tokens and 68 s per
+  run with the skill, 80k tokens and 92 s without. The with-skill run is faster because it copies
+  the partials and the composer instead of working them out.
+- Baseline misses: the switcher written inline in `master.cshtml` instead of a partial; the `"*"`
+  branch publish never explained (the run blamed idempotency and logging); block level variance
+  described without the Document Type varying, no mention of unexposed blocks, and a view that still
+  filters by a lowercased culture; and for `zh-HK` a diagnosis of invariant globalization with no
+  composer and no word about `IIsoCodeValidator`.
+- Haiku is the model the skill helps most, and the one that needed the SKILL.md wording fixes
+  below: it works from SKILL.md and reads a reference only when the router points at it.
 
-On both models the skill costs a few thousand tokens more per run and finishes sooner, because the
-with-skill run copies the partials and composer instead of working them out.
+**Sonnet 5.5**
 
-### What the skill added
+- The skill reached 100% against 85% without it. It costs about 4k more tokens per run (76k against
+  72k) and runs faster (69 s against 101 s).
+- Baseline misses: the switcher inline in `master.cshtml`; the `"*"` publish behaviour again
+  unexplained; block level variance without the Document Type clause; and no composer for `zh-HK`
+  (the baseline switched `InvariantGlobalization` off in the csproj and stopped).
+- The gap is smaller than Haiku's and sits in what has to be known rather than reasoned out: the
+  `"*"` publish rule, unexposed blocks, and that the dropdown is `ICultureService` filtered by
+  `IIsoCodeValidator`.
 
-- **Eval 4 (block level variance).** The Haiku baseline kept the hand-rolled filter, invented a
-  per-block `cultures` checkbox and never mentioned unexposed blocks. With the skill both models
-  made the property shared, varied the element types, and left the view with no culture code.
-- **Eval 5 (zh-HK).** Both baselines diagnosed invariant globalization or a missing ICU package and
-  wrote no composer (Sonnet's wrote a startup check that only logs). With the skill both shipped the
-  `ICultureService` / `IIsoCodeValidator` composer with the validator caveat.
-- **Eval 1 (Danish launch).** Both baselines put the switcher inline in `master.cshtml` instead of
-  a partial; the Sonnet baseline added `da` rather than `da-DK`; the Haiku baseline did not say to
-  keep shared values invariant. With the skill both models copied the two partials and the hreflang
-  `<head>` block verbatim.
-- **Eval 3 (scripted launch).** Neither baseline explained that a branch publish with `"*"`
-  republishes only the default culture (Haiku blamed a validation error; Sonnet fixed the code but
-  gave a different reason). Both with-skill runs did.
+**Across both models**
 
-### Where the baseline already got it
+- Every with-skill run in the final round got full marks. Rounds 1 to 3 each had one to three
+  with-skill misses; each was traced and fixed (below) before the next round.
+- Evals 1, 3, 4 and 5 separate the two sides on both models. Eval 2 (the variation context in a
+  controller and a job) scored 6/6 in all sixteen cells across the four rounds: both models know it
+  without help, so it did not discriminate in any round.
+- Baselines varied between rounds on the same prompt: Sonnet's eval 3 baseline scored 5/6, 5/6, 6/6
+  and 5/6; Haiku's eval 5 baseline 4/7, 6/7, 5/7 and 4/7. Single-run figures are a range.
+- No with-skill run lowercased a culture in any round. In the final round two baselines did: Haiku's
+  eval 4 view kept the fixture's `.ToLower()` on the request culture, and Sonnet's eval 4 migration
+  lowercased the block-settings culture list.
 
-Eval 2 (culture-less controller and job) scored 6/6 in all four cells: both models know the
-variation context without help, so this eval did not discriminate in this round.
+### Earlier rounds and what changed between them
 
-### The two with-skill misses, and what changed
+| Round | Haiku with / baseline | Sonnet with / baseline | With-skill misses and the fix that followed |
+|---|---|---|---|
+| 1 | 32/34 / 24/34 | 33/34 / 28/34 | Eval 1 (both models): the package-manifest expectation was unconditional, but neither run used the package; it is now conditional on using or recommending it. Eval 3 (Haiku): never questioned making Danish the default; SKILL.md now says changing the default is a separate decision. |
+| 2 | 33/34 / 28/34 | 32/34 / 28/34 | All three misses on the build-honesty expectation. Two were the grading note being read as a requirement to predict whether the code compiles; the note now says a run passes by not claiming a build or verification. One Sonnet run told the user the composer "has been validated against Umbraco 17.5", echoing the skill's own runtime-gate claim; SKILL.md now says the gate tests the skill's assets, not the run's copy. |
+| 3 | 33/34 / 27/34 | 34/34 / 30/34 | Eval 4 (Haiku): block level variance described without the Document Type varying. The reference table named all three settings; the SKILL.md bullet named two and now names three. |
+| 4 (final) | 34/34 / 26/34 | 34/34 / 29/34 | None. |
 
-- **Eval 1, expectation 2** (the package manifest does not set fallback, mandatory or default)
-  failed in all four eval-1 cells, including both with-skill runs: no run used the package at all.
-  They created the language in the backoffice and set its fallback there, which the skill allows,
-  and the skill only promises the package note "whenever you use the package". The expectation was
-  unconditional, so it penalised a correct answer and separated nothing. It is now conditional on
-  the run using or recommending the package. The tables above are graded against the old wording;
-  under the new one every eval-1 cell gains one pass (9/9 vs 7/9 on both models).
-- **Eval 3, expectation 4** (Haiku, with skill): the run explained `DefaultUILanguage` correctly
-  and removed it, but never questioned whether Danish should become the site's default language.
-  The skill said where the default lives, not that changing it is a decision. SKILL.md now says
-  so (the default drives no-domain routing and `Fallback.ToDefaultLanguage`; ask before switching
-  it). Re-running only that cell on Haiku with the updated skill (iteration 2) scored 6/6;
-  the run's answer raises the default-language decision explicitly.
+A single-cell re-run of Haiku eval 3 between rounds 1 and 2, against the round-1 SKILL.md fix,
+scored 6/6; the full round 2 confirmed it.
 
 ### Harness notes for the next person
 
 - Sonnet 5.5's safeguards rejected the executor prompt wholesale when its transcript line asked
   for "each step ... and your reasoning", and rejected three runs mid-task even after that was
-  reworded. Ask for "a plain log of the steps you took" instead; a rejected run was reset to a
-  fresh sandbox and re-run, never patched up.
-- One Sonnet baseline wrote its `transcript.md` inside `outputs/` rather than beside it. Harmless,
-  but check before aggregating.
+  reworded. From round 2 both models were asked for "a plain log of the steps you took"; a rejected
+  run was reset to a fresh sandbox and re-run, never patched up.
+- Some runs write `transcript.md` inside `outputs/` rather than beside it. Move it before grading.
+- One Haiku run in round 3 reported a 20-minute wall time although its files were written in two
+  minutes; the harness stalled after the work. Treat a lone outlier like that as harness time.
