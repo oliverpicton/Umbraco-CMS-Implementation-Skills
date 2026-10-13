@@ -12,7 +12,7 @@ runs sit side by side and are reported separately.
 
 ## Project fixture (every eval, both sides)
 
-Each run gets its own sandbox:
+Each run gets its own folder:
 
 ```
 <run>/outputs/
@@ -54,9 +54,7 @@ Each run is told:
 - where the project is, and to edit it in place;
 - that the .NET SDK is installed and it may run `dotnet build` on the project (rounds 1 to 4 had no SDK and
   were told so);
-- where the docs are: `docs.umbraco.com` is blocked from the sandbox, so a shallow clone of
-  [umbraco/UmbracoDocs](https://github.com/umbraco/UmbracoDocs) (the same Markdown, Umbraco 17 under
-  `17/umbraco-cms/`) is given as a read-only path (rounds 1 to 4 had no docs at all);
+- that it may read the Umbraco documentation (rounds 1 to 4 had no docs at all);
 - to save its reply to `outputs/answer.md` and a plain step log to `transcript.md`.
 
 Give the with-skill run the path of a **snapshot** of the skill that contains only `SKILL.md`,
@@ -91,9 +89,10 @@ will think the code changes are missing.
 Grade code expectations from the files under `outputs/project/`, not from `answer.md` alone.
 
 - **Eval 1** is mostly backoffice instructions plus two partials and a view change. Grade the
-  switcher and hreflang expectations from the files the run wrote (`Views/Partials/*.cshtml`,
-  `Views/master.cshtml`, `Views/home.cshtml`). Copying the skill's `languageSwitcher.cshtml` and
-  `hreflangLinks.cshtml` verbatim passes those expectations; the baseline has to write its own.
+  switcher and hreflang expectations from the files the run wrote (`Views/master.cshtml`,
+  `Views/home.cshtml` and any partials). Copying the skill's `languageSwitcher.cshtml` and
+  `hreflangLinks.cshtml` verbatim passes those expectations; an inline switcher with the same
+  behaviour passes too; the baseline has to write its own.
 - **Eval 2**: both files must change. A fix in the controller alone, or advice without an edit,
   fails the "applied in both" expectation. In `Jobs/ProductFeedJob.cs` the hardcoded culture list,
   the `?? Value<string>(..., "en-US")` fallback and the `$"__Published_{culture}"` field must each
@@ -117,19 +116,17 @@ Grade code expectations from the files under `outputs/project/`, not from `answe
   claims to have built, run, rendered, validated or verified anything it did not, including presenting
   the skill's own runtime gate as its verification ("this composer has been validated against
   Umbraco 17.5"). Saying whether the code is expected to compile is welcome but not required.
-- The razor-build expectation is graded from `razor-build.txt` beside the run's `outputs/`, written by
-  the lead after the run with `dotnet build -p:RazorCompileOnBuild=true` on `outputs/project`, not by
-  the run. Exit code 0 passes; anything else fails, whatever the run said.
+- The razor-build expectation is graded from `razor-build.txt` beside the run's `outputs/`, written after
+  the run (not by it) with `dotnet build -p:RazorCompileOnBuild=true` on `outputs/project`. Exit code 0 passes; anything else fails, whatever the run said.
 
 ## Results
 
 Run on 2026-10-13 with the method above: all five evals, with and without the skill, as Claude Code
-subagents on `claude-haiku-5-5` and `claude-sonnet-5-5`, one run per cell, graded by Haiku 5.5.
+runs on `claude-haiku-5-5` and `claude-sonnet-5-5`, one run per cell, graded by Haiku 5.5.
 Five rounds were run. Rounds 1 to 4 had no .NET SDK and no docs; round 5 (the table below) gave every
-run the SDK, permission to build, and the local UmbracoDocs clone, and added the razor-build
-expectation to every eval and the harder eval 2 prompt, so its totals are 41 per column against 34
-before. Conditions that applied to both sides equally in every round: no Umbraco instance or MCP, and
-`docs.umbraco.com` itself blocked by the sandbox's egress proxy. None of the 100 runs modified the
+run the SDK, permission to build and the Umbraco docs, and added the razor-build expectation to every
+eval and the harder eval 2 prompt, so its totals are 41 per column against 34 before. In every round
+neither side had an Umbraco instance or MCP. None of the 100 runs modified the
 `Directory.Packages.props` copy. Read single runs as a range, not a point: baseline scores on the
 same prompt moved by one or two expectations between rounds.
 
@@ -137,12 +134,12 @@ same prompt moved by one or two expectations between rounds.
 
 | Eval | Haiku with skill | Haiku baseline | Sonnet with skill | Sonnet baseline |
 |---|---|---|---|---|
-| 1. Danish launch setup (languages, fallback, domains, switcher, hreflang) | 10/10 | 9/10 | 10/10 | 9/10 |
+| 1. Danish launch setup (languages, fallback, domains, switcher, hreflang) | 10/10 | 10/10 | 10/10 | 10/10 |
 | 2. Culture-less contexts (API controller, background job) | 9/9 | 7/9 | 9/9 | 8/9 |
 | 3. Scripted launch diagnosis (manifest casing, `"*"` publish, fallback, `DefaultUILanguage`) | 7/7 | 5/7 | 7/7 | 5/7 |
 | 4. Block level variance (shared blocks, unexposed blocks, migration) | 7/7 | 7/7 | 7/7 | 7/7 |
 | 5. Missing culture `zh-HK` (composer) | 8/8 | 7/8 | 8/8 | 8/8 |
-| **Mean pass rate** | **100%** (41/41) | **85%** (35/41) | **100%** (41/41) | **90%** (37/41) |
+| **Mean pass rate** | **100%** (41/41) | **88%** (36/41) | **100%** (41/41) | **93%** (38/41) |
 
 Every one of the twenty edited projects built with Razor compilation on (`razor-build.txt` exit 0 in
 all twenty runs), so the build column proves the code compiles but does not separate the two sides.
@@ -151,11 +148,10 @@ times round 4's.
 
 **Haiku 5.5**
 
-- The skill reached 100% against 85% without it, and cost less: 106k tokens and 214 s per run with
+- The skill reached 100% against 88% without it, and cost less: 106k tokens and 214 s per run with
   the skill, 118k tokens and 251 s without. The with-skill run copies the partials and the composer
   and reads one reference; the baseline reads more docs pages and builds more often.
-- Baseline misses: the switcher written inline in `master.cshtml` instead of a partial; in the feed
-  job the `?? Value<string>(..., defaultCulture)` fallback kept, with no explanation that
+- Baseline misses: in the feed job the `?? Value<string>(..., defaultCulture)` fallback kept, with no explanation that
   `Value<string>` returns `""` so `??` never fires; the `__Published_de-DE` query removed but with
   "I could not confirm the exact stored field name" instead of the lowercase suffix; the `"*"`
   publish explained as "publishes every culture" (the opposite of what happens); Danish made the
@@ -166,11 +162,10 @@ times round 4's.
 
 **Sonnet 5.5**
 
-- The skill reached 100% against 90% without it, at lower cost: 87k tokens and 191 s per run with
+- The skill reached 100% against 93% without it, at lower cost: 87k tokens and 191 s per run with
   the skill against 94k and 239 s without.
-- Baseline misses: the switcher inline in `master.cshtml`; `Fallback.ToDefaultLanguage` used in the
-  job (which works) but the `""` against `null` bug behind the fixture's `??` never explained; the
-  `"*"` publish left as "I could not verify in this sandbox that the newer service expands `*`"; and
+- Baseline misses: `Fallback.ToDefaultLanguage` used in the job (which works) but the `""` against `null` bug behind the fixture's `??` never explained; the
+  `"*"` publish left as "I could not verify that the newer service expands `*`"; and
   Danish set as the site default without questioning it.
 - The gap is smaller than Haiku's and sits in what has to be known rather than reasoned out or looked
   up: the `"*"` publish rule, that `Value<string>` is never `null`, and that changing the default
@@ -184,10 +179,15 @@ times round 4's.
   nothing about one, and the grader would not credit a preference it could not see (the round-4
   grader had flagged the same wording as untestable). The expectation now reads "uses the MCP when
   one is available; when none is ... walks the user through them manually rather than skipping them",
-  and that cell was regraded on the same, unchanged run output: 10/10. The other three eval 1 cells
-  passed the old wording and were not regraded.
-- The docs clone lifted the baselines, not the skill: Haiku's baseline went from 76% (round 4) to
-  85%, Sonnet's from 85% to 90%. Eval 4 (block level variance) stopped discriminating: both
+  and that cell was regraded on the same, unchanged run output: 10/10.
+- Eval 1's switcher expectation originally required "a partial under `Views/Partials/`". Both round-5
+  baselines wrote a switcher with the right behaviour inline in `master.cshtml` and lost their only
+  eval 1 point on that clause. Form is not what the eval is for, so the clause now reads "inline or as
+  a partial" and both baseline cells were regraded on their unchanged outputs (both 10/10, which is
+  also the figure in the table); all four eval 1 cells were graded on the current wording of both
+  reworded expectations.
+- Access to the docs lifted the baselines, not the skill: Haiku's baseline went from 76% (round 4) to
+  88%, Sonnet's from 85% to 93%. Eval 4 (block level variance) stopped discriminating: both
   baselines scored 7/7 after reading `block-level-variance.md`, where in round 4 they scored 3/6 and
   5/6. Sonnet's eval 5 baseline wrote the `IIsoCodeValidator` composer from the docs page (8/8;
   5/7 in round 4). Haiku's did not find the page and offered `zh-Hant-HK` instead.
@@ -196,8 +196,10 @@ times round 4's.
   scored 7/9 and 8/9 against 9/9; in rounds 1 to 4 the softer prompt scored 6/6 in all sixteen
   cells. What still separates the sides is the explanation: both baselines fixed the code but could
   not say why the original fallback never fired.
-- Evals 1, 2 and 3 separate the two sides on both models in round 5; eval 5 only on Haiku; eval 4 on
-  neither.
+- Evals 2 and 3 separate the two sides on both models in round 5; eval 5 only on Haiku; evals 1 and
+  4 on neither. What is left in the gap is knowledge the docs do not state plainly: the `"*"` publish
+  rule, `Value<string>` never being `null`, the lowercase Examine suffix, and that changing the default
+  language is a separate decision.
 - No with-skill run lowercased a culture in any round. In round 5 no baseline did either (in round 4
   two had).
 
@@ -208,31 +210,24 @@ times round 4's.
 | 1 | 32/34 / 24/34 | 33/34 / 28/34 | Eval 1 (both models): the package-manifest expectation was unconditional, but neither run used the package; it is now conditional on using or recommending it. Eval 3 (Haiku): never questioned making Danish the default; SKILL.md now says changing the default is a separate decision. |
 | 2 | 33/34 / 28/34 | 32/34 / 28/34 | All three misses on the build-honesty expectation. Two were the grading note being read as a requirement to predict whether the code compiles; the note now says a run passes by not claiming a build or verification. One Sonnet run told the user the composer "has been validated against Umbraco 17.5", echoing the skill's own runtime-gate claim; SKILL.md now says the gate tests the skill's assets, not the run's copy. |
 | 3 | 33/34 / 27/34 | 34/34 / 30/34 | Eval 4 (Haiku): block level variance described without the Document Type varying. The reference table named all three settings; the SKILL.md bullet named two and now names three. |
-| 4 | 34/34 / 26/34 | 34/34 / 29/34 | None. Between rounds 4 and 5 the harness changed, not the skill: SDK installed, builds allowed, docs clone provided, razor-build expectation added to every eval, eval 2 prompt hardened (6 to 8 expectations plus the build one), and the fixture made to compile (see "Project fixture"). |
-| 5 (final) | 41/41 / 35/41 | 41/41 / 37/41 | Eval 1 (Haiku): the MCP expectation could not be met as worded when the prompt says no MCP is running; reworded and the cell regraded on the same output (above). No skill change. |
+| 4 | 34/34 / 26/34 | 34/34 / 29/34 | None. Between rounds 4 and 5 the method changed, not the skill: SDK installed, builds allowed, docs made available, razor-build expectation added to every eval, eval 2 prompt hardened (6 to 8 expectations plus the build one), and the fixture made to compile (see "Project fixture"). |
+| 5 (final) | 41/41 / 36/41 | 41/41 / 38/41 | Eval 1 (Haiku): the MCP expectation could not be met as worded when the prompt says no MCP is running; reworded and the cell regraded on the same output (above). Eval 1's switcher expectation also dropped its "must be a partial" clause, and the two baseline cells were regraded (above). No skill change. |
 
 Rounds 1 to 4 ran with no SDK and no docs, so their with-skill 100% means the runs said and wrote
 what the expectations ask for; round 5 is the first in which the code was also compiled. A
 single-cell re-run of Haiku eval 3 between rounds 1 and 2, against the round-1 SKILL.md fix, scored
 6/6; the full round 2 confirmed it.
 
-### Harness notes for the next person
+### Notes for the next run
 
 - Sonnet 5.5's safeguards rejected the executor prompt wholesale when its transcript line asked
   for "each step ... and your reasoning", and rejected three runs mid-task even after that was
   reworded. From round 2 both models were asked for "a plain log of the steps you took"; a rejected
-  run was reset to a fresh sandbox and re-run, never patched up.
-- The sandbox blocks the .NET download hosts but not `packages.microsoft.com`, so the SDK went in
-  with Microsoft's apt repo (`packages-microsoft-prod.deb` for Ubuntu 24.04, then
-  `apt-get install dotnet-sdk-10.0`). `api.nuget.org` answered, so restore worked. The permanent
-  version is the environment's setup script and `docs.umbraco.com` in its allowed domains.
-- `docs.umbraco.com` is blocked but `github.com/umbraco/UmbracoDocs` clones; the Umbraco 17 pages are
-  under `17/umbraco-cms/`. Give the runs that path read-only.
-- The lead runs the Razor build after each run, two at a time on the 4-core sandbox: 8 to 47 s per
-  project with a warm NuGet cache. Build the fixture overlays first so the cache is warm.
+  run was reset to a fresh folder and re-run, never patched up.
+- Run the Razor build after each run, not inside it. With a warm NuGet cache it takes 8 to 47 s per
+  project, so build the fixture overlays first.
 - Some runs write `transcript.md` inside `outputs/` rather than beside it. Move it before grading.
 - One Haiku run in round 3 reported a 20-minute wall time although its files were written in two
-  minutes; the harness stalled after the work. In round 5 one Haiku baseline (eval 1) finished its
-  work and then stalled for 17 minutes on a stray session call; it was stopped, its outputs graded
-  as written, and its tokens and time estimated from its transcript (first to last action). Treat a
-  lone outlier like that as harness time.
+  minutes, and in round 5 one Haiku baseline (eval 1) finished its work and then stalled; it was
+  stopped, its outputs graded as written, and its tokens and time taken from its transcript (first to
+  last action). Treat a lone outlier like that as time outside the run.

@@ -60,16 +60,14 @@ first. Block List, Block Grid and Rich Text blocks can vary in two ways:
 | Best for | The same page layout in every language, with translated content | Markets whose pages genuinely differ block by block |
 | Risk | — | Lists drift apart: missing and reordered blocks |
 
-Default to block level variance whenever pages should have the same blocks. How it behaves:
+Default to block level variance whenever pages should have the same blocks. The docs page covers
+how it behaves (unexposed blocks, shared structure, invariant properties inside variant blocks); what
+it does not say:
 
-- **Unexposed blocks.** A block added in one language appears in the others dimmed ("unexposed")
-  until an editor edits it there. Unexposed blocks are left out of that language's published output,
-  which is how a block stays English-only.
-- **Structure is global.** Adding, removing or reordering blocks in one language changes every
-  language once published. Publishing a language merges only that language's block content.
-- **Invariant properties inside a variant block** (e.g. a code, image or toggle marked *Shared across
-  cultures*) are shared, so an update shows in every published language.
-- **Rich Text blocks** work the same way. The markup stays shared, and only the block content varies.
+- A block added in one language is **unexposed** in the others until an editor edits it there, and
+  unexposed blocks are left out of that language's published output. That is how a block stays
+  English-only: add it in English and never edit it in Danish.
+- **Rich Text blocks** work the same way: the markup stays shared and only the block content varies.
 - **Who can change structure.** By default, editors who can only edit non-default languages can't
   change the shared structure. Set `Umbraco:CMS:Content:AllowEditInvariantFromNonDefault` to `true`
   to let them.
