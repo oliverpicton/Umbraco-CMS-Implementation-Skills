@@ -70,6 +70,9 @@ language/domain APIs; don't apply this skill there.
   the new language the default, ask whether that is really intended rather than switching it.
 - **Every published culture needs a reachable URL.** If a culture has no domain, its pages can't be
   routed in that culture, and the switcher and hreflang tags have nothing to link to.
+- **The runtime gate tests the skill's assets, not your copy of them.** When handing over, say the
+  partials or composer were copied from this skill and whether *you* built the project. Don't
+  present the gate as your verification ("validated against Umbraco 17.5") unless you ran it.
 
 ## Validation
 
