@@ -56,9 +56,10 @@ language/domain APIs; don't apply this skill there.
   so adding a language needs no code change.
 - **Set a fallback per language and decide mandatory deliberately.** A mandatory language blocks
   publishing every other culture of a node until it has content.
-- **Translate blocks with block level variance, not a varying block property.** Keep the Block
-  List/Grid property invariant and make its element types vary, so every language shares the same
-  blocks and order. A varying block property gives each language its own list, and the lists drift.
+- **Translate blocks with block level variance, not a varying block property.** Three settings, all
+  three stated: the Document Type varies by culture, the Block List/Grid property is invariant
+  (shared), and its element types vary. Every language then shares the same blocks and order. A
+  varying block property gives each language its own list, and the lists drift.
 - **Vary only what differs.** Shared values (SKUs, dates, images with no text) belong on invariant
   properties, or editors enter them once per language and they drift apart.
 - **`Value<string>` returns `""`, not `null`, for a blank value.** A `?? fallback` never fires; use
