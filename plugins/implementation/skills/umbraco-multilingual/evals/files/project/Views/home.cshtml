@@ -2,7 +2,7 @@
 @{
     Layout = "master.cshtml";
 }
-<h1>@Model.Value<string>("title")</h1>
+<h1>@(Model.Value<string>("title"))</h1>
 <div class="intro">
     @Html.Raw(Model.Value<string>("bodyText"))
 </div>

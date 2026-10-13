@@ -26,7 +26,7 @@
             || languages.ToLower().Split(',').Contains(culture);
     });
 }
-<h1>@Model.Value<string>("title")</h1>
+<h1>@(Model.Value<string>("title"))</h1>
 
 @foreach (var block in visibleSections)
 {
@@ -34,20 +34,20 @@
     {
         case "heroSection":
             <section class="hero">
-                <h2>@block.Content.Value<string>("heading")</h2>
-                <p>@block.Content.Value<string>("text")</p>
+                <h2>@(block.Content.Value<string>("heading"))</h2>
+                <p>@(block.Content.Value<string>("text"))</p>
             </section>
             break;
         case "promoSection":
             @* Marketing wants a couple of these to stay English-only. *@
             <section class="promo">
-                <h2>@block.Content.Value<string>("heading")</h2>
-                <a href="@block.Content.Value<string>("linkUrl")">@block.Content.Value<string>("linkText")</a>
+                <h2>@(block.Content.Value<string>("heading"))</h2>
+                <a href="@(block.Content.Value<string>("linkUrl"))">@(block.Content.Value<string>("linkText"))</a>
             </section>
             break;
         default:
             <section>
-                <h2>@block.Content.Value<string>("heading")</h2>
+                <h2>@(block.Content.Value<string>("heading"))</h2>
             </section>
             break;
     }

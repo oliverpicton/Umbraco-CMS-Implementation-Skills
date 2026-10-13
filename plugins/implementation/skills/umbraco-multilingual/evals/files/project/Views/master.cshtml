@@ -14,9 +14,9 @@
     <header class="site-header">
         <a class="site-name" href="/">@siteName</a>
         <nav aria-label="Main">
-            @foreach (var page in Model.Root().Children().Where(c => c.IsVisible()))
+            @foreach (var child in Model.Root().Children().Where(c => c.IsVisible()))
             {
-                <a href="@page.Url()">@page.Name</a>
+                <a href="@child.Url()">@child.Name</a>
             }
         </nav>
     </header>
