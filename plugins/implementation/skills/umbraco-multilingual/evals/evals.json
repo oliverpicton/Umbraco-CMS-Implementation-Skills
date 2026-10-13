@@ -17,13 +17,14 @@
         "The language switcher (a partial under Views/Partials/, rendered from the header in Views/master.cshtml) links to the current page in other published cultures, compares cultures without ToLower() (case-insensitive comparison), and handles a missing home node or untranslated page without throwing",
         "hreflang is emitted as <link rel=\"alternate\" hreflang> in the <head> of Views/master.cshtml with absolute URLs and an x-default, not only as an attribute on switcher links",
         "The agent prefers the Umbraco Developer MCP for backoffice steps and otherwise walks through them manually, rather than skipping them",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
         "If no buildable Umbraco project is available, the agent does not falsely claim to have built or verified the site"
       ]
     },
     {
       "id": 2,
-      "prompt": "Our Umbraco 17 site has English and German. Pages render German correctly at /de/, but a JSON endpoint in our custom API controller (Controllers/PageTitleApiController.cs) that returns the page title always returns the English title even when called from the German site with ?culture=de-DE. Same problem in a nightly Hangfire job (Jobs/ProductFeedJob.cs) that builds a German product feed. Why, and how do we fix it?",
-      "expected_output": "The agent explains that outside a routed front-end request no variation context is set, so IPublishedContent resolves to the default language, and fixes it in both Controllers/PageTitleApiController.cs and Jobs/ProductFeedJob.cs by setting IVariationContextAccessor.VariationContext = new VariationContext(culture) or passing the culture to Value/Url explicitly.",
+      "prompt": "Our Umbraco 17 site is English (default) plus German, and pages render fine in German at /de/. Two things don't. 1) Controllers/PageTitleApiController.cs returns the English title for GET /api/page-title?key=...&culture=de-DE. A colleague lowercased the incoming culture \"to be safe\" and matches it against the configured languages, but it still comes back English, and the response now says culture en-US every time. 2) Jobs/ProductFeedJob.cs writes one feed per culture nightly: products-de-DE.txt is empty most nights, and on the nights it did have rows the descriptions and names were English. Marketing want French next year and I'd like that to need no code change. Can you work out what is wrong in both files and fix them?",
+      "expected_output": "The agent explains that outside a routed front-end request no variation context is set, so IPublishedContent resolves to the default language, and fixes both files: it sets IVariationContextAccessor.VariationContext = new VariationContext(culture) or passes the culture to Value/Url explicitly; removes the ToLowerInvariant() and compares the culture case-insensitively (or looks it up through ILanguageService) while passing it on in ISO casing; replaces the hardcoded { \"en-US\", \"de-DE\" } array with cultures read from ILanguageService or IPublishedContent.Cultures so French needs no code change; replaces the Value<string>(...) ?? fallback (which never fires because a blank value is \"\", not null) with Fallback.ToLanguage or a string.IsNullOrWhiteSpace check; and either lowercases the Examine culture suffix (__Published_de-de) or drops the hand-built field for a culture-aware IsPublished(culture) check, explaining that Examine stores culture field suffixes lowercase.",
       "files": [
         "evals/files/project/",
         "evals/files/culture-context/"
@@ -31,10 +32,13 @@
       "expectations": [
         "The agent explains that API controllers and background jobs are culture-less contexts where IPublishedContent resolves to the default language",
         "The fix is applied in both Controllers/PageTitleApiController.cs and Jobs/ProductFeedJob.cs: it sets IVariationContextAccessor.VariationContext to a new VariationContext(culture), or passes the culture explicitly to Value(alias, culture) / Url(culture)",
-        "The culture comes from the request or job input (the controller's culture query parameter, the job's de-DE feed culture), not a hardcoded culture list",
+        "The hardcoded culture array in Jobs/ProductFeedJob.cs is replaced by cultures read from ILanguageService (e.g. GetAllAsync() / GetAllIsoCodesAsync()) or from IPublishedContent.Cultures, and the answer says that adding French then needs no code change",
+        "Blank German values fall back via Fallback.ToLanguage (or an explicit string.IsNullOrWhiteSpace check), and the answer explains that Value<string> returns \"\" not null for a blank value, so the ?? fallback never fires",
+        "No ToLower() / ToLowerInvariant() on a culture code remains in either file; cultures are compared case-insensitively (StringComparison.OrdinalIgnoreCase or the language service's own lookup) and passed on in ISO casing (de-DE)",
+        "The Examine published-culture field is addressed with the lowercase suffix (__Published_de-de), or the hand-built field is replaced by a culture-aware query/filter (e.g. checking content.IsPublished(culture) / Cultures after the search), and the answer explains that Examine stores culture field suffixes lowercase",
         "The agent does not suggest changing Umbraco:CMS:Global:DefaultUILanguage or the default language as the fix",
-        "The agent does not lowercase the culture code (e.g. keeps de-DE, compares case-insensitively)",
-        "If no buildable Umbraco project is available, the agent does not falsely claim to have verified the fix"
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have built or verified the fix"
       ]
     },
     {
@@ -51,6 +55,7 @@
         "The agent explains that importing a language from a package does not set its fallback language, and fixes it by setting da-DK's fallback to English (backoffice Settings → Languages, MCP, or ILanguageService/FallbackIsoCode in the migration)",
         "The agent explains that Umbraco:CMS:Global:DefaultUILanguage is the backoffice UI language, not the site's default content language, which is set on the language itself; it removes the DefaultUILanguage setting from appsettings.json or explains that leaving it only changes the backoffice UI language (and questions whether Danish should really become the default)",
         "The agent does not propose lowercasing cultures or comparing them with ToLower() as a fix",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
         "If no buildable Umbraco project is available, the agent does not falsely claim to have run the migration or verified the fixes"
       ]
     },
@@ -68,6 +73,7 @@
         "The agent explains that a block can stay English-only by not exposing it in Danish (the 'unexposed' state), and that unexposed blocks are omitted from the Danish output",
         "The agent rewrites Views/home.cshtml so it needs no filtering or culture code, removing the hand-rolled languages/danishOnly filtering and the lowercased culture comparison: Model.Value<BlockListModel>(\"sections\") already omits unexposed blocks and returns the request culture's values (optionally mentioning Fallback.ToLanguage to show untranslated blocks)",
         "The agent warns that switching the property from varying to shared keeps only the default language's block list and discards the Danish lists, so the Danish text must be captured first and re-entered as Danish block variants, rehearsed on a copy of the database",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
         "If no buildable Umbraco project is available, the agent does not falsely claim to have run the migration or verified the output"
       ]
     },
@@ -85,6 +91,7 @@
         "The agent does not recommend switching to zh-Hant-HK as a workaround (Umbraco's stock validator rejects it as a custom culture)",
         "The agent does not suggest changing Umbraco:CMS:Global:DefaultUILanguage or adding backoffice translation files as the fix",
         "The agent says a rebuild/restart is needed before the culture appears",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
         "If no buildable Umbraco project is available, the agent does not falsely claim to have built it or seen zh-HK in the dropdown"
       ]
     }

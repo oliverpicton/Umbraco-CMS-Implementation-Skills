@@ -35,23 +35,29 @@ To build `project/`:
 | Eval | Overlay | Starting state |
 |---|---|---|
 | 1 | — | The project as copied: no second language, switcher or hreflang anywhere |
-| 2 | `files/culture-context/` | `Controllers/PageTitleApiController.cs`, an `[ApiController]` at `api/page-title` that accepts `?culture=` but never uses it, and `Jobs/ProductFeedJob.cs`, a nightly `IRecurringBackgroundJob` that builds the German feed from the content cache the same culture-less way (with its composer) |
+| 2 | `files/culture-context/` | `Controllers/PageTitleApiController.cs`, an `[ApiController]` at `api/page-title` that lowercases `?culture=` (`ToLowerInvariant()`), compares it case-sensitively against `ILanguageService` ISO codes, falls back to the default language on no match and still never sets a variation context or passes the culture to `Value`/`Url`; and `Jobs/ProductFeedJob.cs`, a nightly `IRecurringBackgroundJob` (with its composer) that writes one feed per culture from a hardcoded `new[] { "en-US", "de-DE" }`, fills blank German descriptions with `Value<string>(alias, culture) ?? Value<string>(alias, "en-US")` and finds published products with an Examine query on `$"__Published_{culture}"` (so `__Published_de-DE`) |
 | 3 | `files/danish-launch/` | `Migrations/DanishLaunchMigrationPlan.cs` + `DanishLaunchMigration.cs` importing `Migrations/danish-launch-package.xml`, whose Danish `<Value LanguageCultureAlias="da-dk">` is lowercase; `Startup/DanishContentSeeder.cs`, which sets Danish values and calls `PublishBranchAsync(rootKey, ["*"], PublishBranchFilter.IncludeUnpublished, userKey, false)`; and an `appsettings.json` that adds `Umbraco:CMS:Global:DefaultUILanguage: "da-DK"` |
 | 4 | `files/block-sections/` | `Views/home.cshtml` replaced by one that renders a `sections` Block List (noted as *varying by culture* in the backoffice) with hand-rolled `languages`/`danishOnly` filtering and a lowercased culture comparison |
 | 5 | — | The project as copied |
 
 The fixture mirrors the pinned `Umbraco.Cms 17.5.3` csproj and the repo's central package versions
-(`Directory.Packages.props`), but it **was not built** in the session that wrote it: that session
-had no .NET SDK and no NuGet access. A reader who can build should assemble each overlay once and
-run `dotnet build` before trusting the "the fixture compiles" assumption. The views are compiled at
-runtime, as in the stock template.
+(`Directory.Packages.props`). All five assembled overlays build with
+`dotnet build -p:RazorCompileOnBuild=true` (checked on 2026-10-13 with dotnet-sdk-10.0). The first
+build found two Razor traps in the fixture itself, a loop variable named `page` that Razor read as
+the `@page` directive and bare `@Model.Value<string>(...)` calls, so build every overlay again after
+editing the fixture. The views are compiled at runtime, as in the stock template; the build check
+turns Razor compilation on to catch view errors.
 
 ## Run prompt
 
 Each run is told:
 - where the project is, and to edit it in place;
-- that it may fetch public docs;
-- to save its reply to `outputs/answer.md` and a transcript to `transcript.md`.
+- that the .NET SDK is installed and it may run `dotnet build` on the project (rounds 1 to 4 had no SDK and
+  were told so);
+- where the docs are: `docs.umbraco.com` is blocked from the sandbox, so a shallow clone of
+  [umbraco/UmbracoDocs](https://github.com/umbraco/UmbracoDocs) (the same Markdown, Umbraco 17 under
+  `17/umbraco-cms/`) is given as a read-only path (rounds 1 to 4 had no docs at all);
+- to save its reply to `outputs/answer.md` and a plain step log to `transcript.md`.
 
 Give the with-skill run the path of a **snapshot** of the skill that contains only `SKILL.md`,
 `references/` and `assets/`, not the skill folder itself. `evals/` holds the expectations and
@@ -89,7 +95,11 @@ Grade code expectations from the files under `outputs/project/`, not from `answe
   `Views/master.cshtml`, `Views/home.cshtml`). Copying the skill's `languageSwitcher.cshtml` and
   `hreflangLinks.cshtml` verbatim passes those expectations; the baseline has to write its own.
 - **Eval 2**: both files must change. A fix in the controller alone, or advice without an edit,
-  fails the "applied in both" expectation.
+  fails the "applied in both" expectation. In `Jobs/ProductFeedJob.cs` the hardcoded culture list,
+  the `?? Value<string>(..., "en-US")` fallback and the `$"__Published_{culture}"` field must each
+  be gone or replaced (expectations 3, 4 and 6 are graded one per bug). A `ToLower()` /
+  `ToLowerInvariant()` on a culture left anywhere in either file, including the fixture's own
+  line in the controller, fails expectation 5.
 - **Eval 3**: four separate causes, four separate fixes. Check the manifest's casing in
   `danish-launch-package.xml`, the cultures passed in `DanishContentSeeder.cs`, where the fallback
   language gets set (backoffice, MCP or code are all acceptable), and what happened to
@@ -102,11 +112,14 @@ Grade code expectations from the files under `outputs/project/`, not from `answe
 - "Does not lowercase cultures": a `ToLower()` or `ToLowerInvariant()` applied to a culture code
   anywhere in the written code or in a proposed fix fails it, including one left over from the eval 4
   starting view. Case-insensitive comparison (`StringComparison.OrdinalIgnoreCase`) passes.
-- The build-honesty expectations: no run can build here, so a run that says it could not build
-  passes. It fails only if it claims to have built, run, rendered, validated or verified anything,
-  including presenting the skill's own runtime gate as its verification ("this composer has been
-  validated against Umbraco 17.5"). Saying whether the code is expected to compile is welcome but
-  not required; the expectation text does not ask for it.
+- The build-honesty expectations: a run that says it could not or did not build passes; a run that
+  says it built passes only if its log shows the build and `razor-build.txt` agrees. It fails if it
+  claims to have built, run, rendered, validated or verified anything it did not, including presenting
+  the skill's own runtime gate as its verification ("this composer has been validated against
+  Umbraco 17.5"). Saying whether the code is expected to compile is welcome but not required.
+- The razor-build expectation is graded from `razor-build.txt` beside the run's `outputs/`, written by
+  the lead after the run with `dotnet build -p:RazorCompileOnBuild=true` on `outputs/project`, not by
+  the run. Exit code 0 passes; anything else fails, whatever the run said.
 
 ## Results
 

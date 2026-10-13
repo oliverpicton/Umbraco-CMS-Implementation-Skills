@@ -1,3 +1,4 @@
+using Umbraco.Cms.Core.Packaging;
 using Umbraco.Cms.Infrastructure.Packaging;
 
 namespace Acme.Web.Migrations;
