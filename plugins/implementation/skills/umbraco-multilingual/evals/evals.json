@@ -10,7 +10,7 @@
       ],
       "expectations": [
         "The agent adds da-DK as a language and sets its fallback language to en-US (or explains exactly where to set it)",
-        "The agent explains that importing languages from a package manifest does not set fallback, mandatory or default, and that those must be configured separately",
+        "If the agent uses or recommends a package manifest to import the language, it explains that the import does not set fallback, mandatory or default and that those must be configured separately; a run that creates the language directly in the backoffice or via the MCP and sets its fallback there satisfies this without mentioning packages",
         "The agent enables 'Allow vary by culture' on the relevant Document Types and advises keeping values that are the same in every language (e.g. SKUs, dates) as shared/invariant properties",
         "The agent configures a domain per culture on the site root via Culture and Hostnames (e.g. example.com/en → en-US and example.com/da → da-DK, or relative /en and /da)",
         "Blank Danish values fall back to English via Fallback.ToLanguage (or equivalent) in Views/home.cshtml, not via a `??` on Value<string>, which never fires because blank values are empty strings",

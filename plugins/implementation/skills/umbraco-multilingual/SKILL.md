@@ -64,13 +64,18 @@ language/domain APIs; don't apply this skill there.
 - **`Value<string>` returns `""`, not `null`, for a blank value.** A `?? fallback` never fires; use
   `Fallback.ToLanguage` or `string.IsNullOrWhiteSpace`.
 - **`Umbraco:CMS:Global:DefaultUILanguage` is the *backoffice* UI language.** The site's default
-  content language is set on the language itself (Settings → Languages → Default language).
+  content language is set on the language itself (Settings → Languages → Default language). Changing
+  that default is a separate decision from adding a language: the default is what renders when no
+  domain matches and what `Fallback.ToDefaultLanguage` reads, so when a launch request implies making
+  the new language the default, ask whether that is really intended rather than switching it.
 - **Every published culture needs a reachable URL.** If a culture has no domain, its pages can't be
   routed in that culture, and the switcher and hreflang tags have nothing to link to.
 
 ## Validation
 
 Assertions live in [`evals/evals.json`](evals/evals.json); run them with `umbraco-skill-evaluator`.
+[`evals/README.md`](evals/README.md) has the project fixture, the run-prompt rules, and the Haiku and
+Sonnet results (with and without the skill).
 The runtime gate covers both gated parts:
 - `examples/culture-variants/` on the blank host (languages, domains, fallback, dictionary, switcher,
   hreflang, block level variance);
