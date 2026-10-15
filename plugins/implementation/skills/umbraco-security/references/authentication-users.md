@@ -32,7 +32,9 @@ Management API. For website visitors, see [authentication-members.md](authentica
   `OnAutoLinking`. Map groups from IdP claims rather than giving everyone a fixed group, and
   never default to administrators. `DefaultUserGroups` in `ExternalSignInAutoLinkOptions` is the
   fixed fallback; per-claim mapping is `user.AddRole("<group alias>")` in `OnAutoLinking`, reading the claims
-  from the login info as the docs' "Transferring Claims" section shows. That runs on first
+  from the login info as the docs' "Transferring Claims" section shows. For example, add
+  `editor` when `loginInfo.Principal` has a `groups` claim with the Marketing group's ID; IdPs
+  usually send group IDs, not names, so map from configuration. That runs on first
   sign-in only; changes made in `OnExternalLogin` for existing users are not saved for you. Auto-linked users have no local password. `DenyLocalLogin`
   then removes password login entirely, so keep one break-glass local admin, or the documented
   admin reset, available before turning it on.

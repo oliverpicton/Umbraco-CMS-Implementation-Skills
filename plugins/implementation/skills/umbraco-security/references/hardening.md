@@ -20,12 +20,15 @@ list and the files changed.
 1. **Runtime mode `Production`** (`Umbraco:CMS:Runtime:Mode`). Umbraco then refuses to boot
    unless the entry assembly is built in Release (JIT optimizer on), `ModelsBuilder:ModelsMode`
    is `Nothing`, `Global:UseHttps` is `true` and `WebRouting:UmbracoApplicationUrl` is set
-   ([https.md](https.md)). The process stays up but every request returns a 500
-   `BootFailedException`; only the log lists the failing checks. Production also has no Razor
-   runtime compilation and no in-memory models, so views and models must be compiled into the
-   build: generate models (`SourceCodeManual`) before switching to `Nothing`, and remove any
-   `RazorCompileOnBuild`/`RazorCompileOnPublish` `false` settings. Otherwise pages 404 with "No
-   physical template file was found".
+   ([https.md](https.md)). Those four are the only boot checks. A failing one means the site fails
+   at startup: the process stays up, but every request returns a 500 `BootFailedException`, and
+   only the log lists the failing checks.
+
+   Separately, and **not** a boot check: Production has no Razor runtime compilation and no
+   in-memory models, so views and models must be compiled into the build. Generate models
+   (`SourceCodeManual`) before switching to `Nothing`, and remove any
+   `RazorCompileOnBuild`/`RazorCompileOnPublish` `false` settings. Otherwise the site boots but
+   pages 404 with "No physical template file was found".
 2. **HTTPS everywhere, HSTS on**: [https.md](https.md).
 3. **Security headers and CSP, technology headers removed**: [security-headers.md](security-headers.md).
 4. **Restrict `/umbraco` by IP or VPN** where editors work from known networks. The docs' IIS
