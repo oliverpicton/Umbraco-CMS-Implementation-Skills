@@ -11,7 +11,7 @@
         "The agent advises against adding 'unsafe-inline' to script-src as the fix",
         "The fix calls Umbraco's `UseUmbracoCspNonceInjection()` after NWebsec's `UseCsp()` (or otherwise puts the `ICspNonceService` nonce into the single existing CSP header), rather than appending a second Content-Security-Policy header",
         "The backoffice gets the extra sources it needs, at least `blob:`/`data:` images or the Umbraco news-dashboard/marketplace hosts or `'unsafe-inline'` styles, scoped to `/umbraco` or explicitly called out as backoffice requirements",
-        "The inline dataLayer script uses Umbraco's `asp-csp-nonce` tag helper attribute (or an `ICspNonceService` nonce) in the view",
+        "The inline dataLayer script is allowed without `'unsafe-inline'`: via Umbraco's `asp-csp-nonce` tag helper / `ICspNonceService` nonce on pages that are not output-cached, or via a hash or external script file where the page is output-cached, with the choice tied to the caching",
         "The agent warns that a per-request CSP nonce conflicts with Umbraco's website output caching or any other HTML caching (a cached page carries a stale nonce), and says how to handle it",
         "The agent flags that X-Frame-Options is set in two places (NWebsec `UseXfo` and Cloudflare) and recommends a single source, and/or warns that `DENY` can break backoffice preview, recommending `SAMEORIGIN`",
         "The rollout advice uses `Content-Security-Policy-Report-Only` (or NWebsec's report-only CSP) before enforcing",
