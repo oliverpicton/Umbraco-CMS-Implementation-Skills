@@ -36,8 +36,12 @@ The proxy talks plain HTTP to the app, so ASP.NET Core sees every request as `ht
 result, `UseHttpsRedirection()` loops, `UseHttps` denies backoffice authorization, and generated
 URLs come out as `http://`. The fix is `ForwardedHeadersOptions` plus
 `app.UseForwardedHeaders()`, called **first**: before redirection and before `app.UseUmbraco()`.
-Restrict `KnownProxies`/`KnownNetworks` to the real proxy, because trusting forwarded headers
-from anywhere lets clients spoof their scheme and IP. Set `UmbracoApplicationUrl` to the public
+Trusting forwarded headers from anywhere lets clients spoof their scheme and IP, so trust only the
+real proxy. Either list its addresses in `KnownProxies`/`KnownIPNetworks`, or, for CDNs with large
+or changing ranges such as Front Door and Cloudflare, clear those lists **and** make the origin
+unreachable except through the proxy. For Front Door that means an App Service access restriction
+on the `AzureFrontDoor.Backend` service tag plus the `X-Azure-FDID` header. Clearing the lists
+without locking the origin is the common mistake. Set `UmbracoApplicationUrl` to the public
 `https://` URL so background work (emails, scheduled publishing) doesn't build URLs from an
 internal address.
 

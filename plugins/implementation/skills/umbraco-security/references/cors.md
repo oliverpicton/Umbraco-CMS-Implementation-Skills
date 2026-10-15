@@ -34,10 +34,12 @@ use the Delivery API, and a server-side integration should use an API user (see
    trailing slash. Read them from configuration so staging and production can differ. Keep a
    `http://localhost:3000`-style origin for development in `appsettings.Development.json`, not in
    the production list.
-5. **Headers:** a Delivery API client sends custom headers that need `WithHeaders(...)`:
-   `Api-Key`, `Accept-Language`, `Accept-Segment`, `Preview` and `Start-Item`, plus
-   `Authorization` for member access tokens and `Content-Type` for JSON bodies. A missing header
-   shows up as a preflight failure and is commonly misread as an auth bug.
+5. **Headers:** list the headers the browser actually sends in `WithHeaders(...)`. Usually that is
+   `Accept-Language`, `Accept-Segment` and `Start-Item`, plus `Authorization` for member access
+   tokens and `Content-Type` for JSON bodies. A missing header shows up as a preflight failure and
+   is commonly misread as an auth bug. Leave out `Api-Key` and `Preview`. They belong to
+   server-side callers (see below), and allowing them from the browser invites someone to put the
+   key there.
 6. **Credentials:** `AllowCredentials()` only if the browser must send cookies. ASP.NET Core
    rejects it combined with `AllowAnyOrigin()`. Bearer tokens in `Authorization` don't need it.
 
