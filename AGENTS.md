@@ -52,6 +52,7 @@ Folder to Workspace", Codex multi-root, etc.).
 | [`umbraco-custom-maintenance-page`](plugins/implementation/skills/umbraco-custom-maintenance-page/SKILL.md) | `implementation` | Customize the page shown to visitors while Umbraco runs upgrade migrations. Covers Umbraco 17+ upgrade pages, including the unattended upgrade view introduced for Umbraco 17.3+, the documented Umbr... |
 | [`umbraco-security`](plugins/implementation/skills/umbraco-security/SKILL.md) | `implementation` | Secures Umbraco 17+ sites: HTTPS and reverse proxies, security headers and CSP, CORS for headless front ends, backoffice user and member authentication, authorization and protected content, and pro... |
 | [`umbraco-sitemap`](plugins/implementation/skills/umbraco-sitemap/SKILL.md) | `implementation` | Add an XML sitemap to an Umbraco 17+ site. Offers two approaches: the official docs Razor-template + Document Type approach, and a custom cached API controller that needs no backoffice setup. Use t... |
+| [`umbraco-templating`](plugins/implementation/skills/umbraco-templating/SKILL.md) | `implementation` | Server-rendered Umbraco 17 front-end: Razor templates and layouts, partial views, view components, route hijacking (RenderController + view model) and surface-controller form posts. Use when asked ... |
 <!-- SKILLS-INDEX:END -->
 
 ## If you are an agent working on this repository itself
