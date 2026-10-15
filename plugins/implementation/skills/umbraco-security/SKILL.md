@@ -1,17 +1,17 @@
 ---
 name: umbraco-security
 description: >
-  Index and decision guide for securing an Umbraco 17+ site: authentication for backoffice users
-  and members, authorization and protected content, HTTPS, CORS, security headers (CSP,
-  X-Frame-Options, HSTS) and production hardening. Routes each task to a reference file that names
-  the official docs page to fetch and the traps those docs don't flag. Use this whenever the user
-  asks to "secure", "harden" or "pen-test-proof" an Umbraco site, add a Content Security Policy or
-  security headers, force HTTPS or fix a redirect loop behind a proxy, enable CORS for a headless
-  or Delivery API front end, add SSO or external login (Entra ID, Google), add two-factor
-  authentication, protect member-only pages or API endpoints, lock down the backoffice, or fix a
-  failing Umbraco security health check.
-  SKIP: non-Umbraco projects, Umbraco versions below 17, and Umbraco Cloud platform settings
-  (see the Umbraco Cloud security docs instead).
+  Secures Umbraco 17+ sites: HTTPS and reverse proxies, security headers and CSP, CORS for
+  headless front ends, backoffice user and member authentication, authorization and protected
+  content, and production hardening. Routes each task to a reference file naming the docs page to
+  fetch and the traps those docs miss. Use this whenever the user asks to secure, harden or
+  security-review an Umbraco site, fix pen-test or security health check findings, add a Content
+  Security Policy or security headers, fix a blank backoffice after adding a CSP, force HTTPS or
+  fix a redirect loop behind Azure Front Door, Cloudflare or a load balancer, find out why
+  Production runtime mode won't start, enable CORS for a Delivery API or SPA front end, protect
+  the Delivery API key or preview, add SSO, external login or 2FA, protect member-only pages,
+  files or API endpoints, or restrict the backoffice.
+  SKIP: non-Umbraco projects, Umbraco versions below 17, and Umbraco Cloud platform settings.
 ---
 
 # Umbraco Security
