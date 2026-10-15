@@ -56,21 +56,30 @@ language/domain APIs; don't apply this skill there.
   so adding a language needs no code change.
 - **Set a fallback per language and decide mandatory deliberately.** A mandatory language blocks
   publishing every other culture of a node until it has content.
-- **Translate blocks with block level variance, not a varying block property.** Keep the Block
-  List/Grid property invariant and make its element types vary, so every language shares the same
-  blocks and order. A varying block property gives each language its own list, and the lists drift.
+- **Translate blocks with block level variance, not a varying block property.** Three settings, all
+  three stated: the Document Type varies by culture, the Block List/Grid property is invariant
+  (shared), and its element types vary. Every language then shares the same blocks and order. A
+  varying block property gives each language its own list, and the lists drift.
 - **Vary only what differs.** Shared values (SKUs, dates, images with no text) belong on invariant
   properties, or editors enter them once per language and they drift apart.
 - **`Value<string>` returns `""`, not `null`, for a blank value.** A `?? fallback` never fires; use
   `Fallback.ToLanguage` or `string.IsNullOrWhiteSpace`.
 - **`Umbraco:CMS:Global:DefaultUILanguage` is the *backoffice* UI language.** The site's default
-  content language is set on the language itself (Settings → Languages → Default language).
+  content language is set on the language itself (Settings → Languages → Default language). Changing
+  that default is a separate decision from adding a language: the default is what renders when no
+  domain matches and what `Fallback.ToDefaultLanguage` reads, so when a launch request implies making
+  the new language the default, ask whether that is really intended rather than switching it.
 - **Every published culture needs a reachable URL.** If a culture has no domain, its pages can't be
   routed in that culture, and the switcher and hreflang tags have nothing to link to.
+- **The runtime gate tests the skill's assets, not your copy of them.** When handing over, say the
+  partials or composer were copied from this skill and whether *you* built the project. Don't
+  present the gate as your verification ("validated against Umbraco 17.5") unless you ran it.
 
 ## Validation
 
 Assertions live in [`evals/evals.json`](evals/evals.json); run them with `umbraco-skill-evaluator`.
+[`evals/README.md`](evals/README.md) has the project fixture, the run-prompt rules, and the Haiku and
+Sonnet results (with and without the skill).
 The runtime gate covers both gated parts:
 - `examples/culture-variants/` on the blank host (languages, domains, fallback, dictionary, switcher,
   hreflang, block level variance);
