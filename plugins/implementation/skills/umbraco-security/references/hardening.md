@@ -23,10 +23,8 @@ list and the files changed.
 2. **HTTPS everywhere, HSTS on**: [https.md](https.md).
 3. **Security headers and CSP**: [security-headers.md](security-headers.md). Remove `Server` and
    `X-Powered-By`.
-4. **Restrict `/umbraco` by IP or VPN** where editors work from known networks. The IIS rule in
-   the docs predates Umbraco 14. Under `/umbraco` now live the **Delivery API**
-   (`/umbraco/delivery/api`), surface and API controllers, basic-auth pages, and the Management
-   API (`/umbraco/management/api`). Exempt the public ones you use, or the front end breaks. For a
+4. **Restrict `/umbraco` by IP or VPN** where editors work from known networks. Exempt the public
+   endpoints that live under `/umbraco` (see *Docs corrections*), or the front end breaks. For a
    non-IIS host (nginx, Front Door, App Gateway WAF), apply the same rule there.
 5. **Routing settings:** set `WebRouting:DisableAlternativeTemplates` and
    `WebRouting:DisableFindContentByIdPath` to `true` unless the site relies on them. Both default
@@ -52,9 +50,8 @@ list and the files changed.
     exposure checked ([authorization.md](authorization.md)).
 11. **Cookies:** the session cookie is `UMB_SESSION`. Umbraco registers it HttpOnly. To force
     `Secure`, add your own `AddSession` call; the last registration wins. Register it on
-    `builder.Services` **before** `builder.Build()`, even though the
-    [cookies page](https://docs.umbraco.com/umbraco-cms/run-in-production/security/cookies.md)
-    says "after `Build()`". List the backoffice cookies in the site's cookie policy.
+    `builder.Services` **before** `builder.Build()` (see *Docs corrections*). List the backoffice
+    cookies in the site's cookie policy.
 12. **Staging and preview environments:** front-end
     [basic authentication](https://docs.umbraco.com/umbraco-cms/run-in-production/security/basic-authentication.md)
     or IP restriction, plus `noindex`. Never reuse the production Delivery API key.
@@ -65,3 +62,15 @@ list and the files changed.
 14. **Regulated hosting:** follow the
     [FIPS setup](https://docs.umbraco.com/umbraco-cms/run-in-production/security/setup-umbraco-for-a-fips-server.md)
     only if the user says the server must be FIPS-compliant.
+
+## Docs corrections
+
+Where the docs pages and Umbraco 17 disagree, follow this list:
+
+- **[Cookies](https://docs.umbraco.com/umbraco-cms/run-in-production/security/cookies.md)** says to
+  add the `AddSession` call "after `Build()`". Services can't be registered once the app is
+  built, so that throws. Register it before `builder.Build()`.
+- **[Security hardening](https://docs.umbraco.com/umbraco-cms/run-in-production/security/security-hardening.md)**:
+  the IIS rule exempts only `umbraco/api` and `umbraco/surface`. It predates Umbraco 14, so it also
+  blocks the Delivery API (`/umbraco/delivery/api`), the basic-auth pages and the Management API
+  (`/umbraco/management/api`). Add the ones the site uses to the exemption.
