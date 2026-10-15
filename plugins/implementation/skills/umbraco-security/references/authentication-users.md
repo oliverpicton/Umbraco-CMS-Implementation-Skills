@@ -30,7 +30,10 @@ Management API. For website visitors, see [authentication-members.md](authentica
   environment, in the identity provider.
 - **Auto-linking** creates Umbraco users on first SSO login and assigns user groups in
   `OnAutoLinking`. Map groups from IdP claims rather than giving everyone a fixed group, and
-  never default to administrators. Auto-linked users have no local password. `DenyLocalLogin`
+  never default to administrators. `DefaultUserGroups` in `ExternalSignInAutoLinkOptions` is the
+  fixed fallback; per-claim mapping is `user.AddRole("<group alias>")` in `OnAutoLinking`, reading the claims
+  from the login info as the docs' "Transferring Claims" section shows. That runs on first
+  sign-in only; changes made in `OnExternalLogin` for existing users are not saved for you. Auto-linked users have no local password. `DenyLocalLogin`
   then removes password login entirely, so keep one break-glass local admin, or the documented
   admin reset, available before turning it on.
 - Keep claims copied into the backoffice identity small. They live in the auth cookie, and
