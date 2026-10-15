@@ -1,0 +1,71 @@
+{
+  "skill_name": "umbraco-security",
+  "evals": [
+    {
+      "id": 1,
+      "name": "csp-and-headers",
+      "prompt": "Our pen test report for the Umbraco 17 marketing site came back and flagged: no Content-Security-Policy, missing X-Frame-Options and X-Content-Type-Options, and the `Server: Kestrel` header leaking. The Umbraco Health Check dashboard says the same. We have one inline <script> in Views/Shared/_Layout.cshtml that pushes to the GTM dataLayer, and we load GTM from https://www.googletagmanager.com. Editors still need the backoffice to work afterwards (last time someone added a CSP the backoffice went blank). Here's our Program.cs:\n\n```csharp\nWebApplicationBuilder builder = WebApplication.CreateBuilder(args);\n\nbuilder.CreateUmbracoBuilder()\n    .AddBackOffice()\n    .AddWebsite()\n    .AddDeliveryApi()\n    .AddComposers()\n    .Build();\n\nWebApplication app = builder.Build();\n\nawait app.BootUmbracoAsync();\n\napp.UseUmbraco()\n    .WithMiddleware(u =>\n    {\n        u.UseBackOffice();\n        u.UseWebsite();\n    })\n    .WithEndpoints(u =>\n    {\n        u.UseBackOfficeEndpoints();\n        u.UseWebsiteEndpoints();\n    });\n\nawait app.RunAsync();\n```\n\nCan you write the changes (updated Program.cs, any new classes, and the layout change) and tell me how to roll it out safely?",
+      "expected_output": "Security-header middleware registered before app.UseUmbraco() (or in an UmbracoPipelineFilter PrePipeline) that sends a separate CSP for /umbraco paths (backoffice needs Umbraco's per-request nonce via ICspNonceService, plus the documented sources) and for the public site (GTM allowed, nonce for the inline script). The inline layout script gets the asp-csp-nonce tag helper. X-Frame-Options SAMEORIGIN and X-Content-Type-Options nosniff are added, X-XSS-Protection is not, and the Server header is removed via Kestrel's AddServerHeader = false. Rollout starts with Content-Security-Policy-Report-Only and is verified with requests to both a content page and /umbraco.",
+      "files": [],
+      "expectations": [
+        "The header middleware is placed before `app.UseUmbraco()` in Program.cs, or registered in an `UmbracoPipelineFilter` `PrePipeline` slot, not after `UseUmbraco()`",
+        "The backoffice (`/umbraco` paths) gets a different Content-Security-Policy from the public site, selected by request path",
+        "The backoffice CSP's `script-src` includes the per-request nonce obtained from Umbraco's `ICspNonceService` (or uses `UseUmbracoCspNonceInjection()`), rather than `'unsafe-inline'` scripts or a hard-coded nonce",
+        "The inline dataLayer script in _Layout.cshtml gets Umbraco's `asp-csp-nonce` attribute, or an equivalent `ICspNonceService` nonce, and the public CSP allows https://www.googletagmanager.com",
+        "The `Server` header is removed with Kestrel `AddServerHeader = false` (or the IIS web.config equivalent), not by response-header middleware",
+        "The answer does not add an `X-XSS-Protection` header",
+        "The rollout advice includes `Content-Security-Policy-Report-Only` first, then switching to enforcing",
+        "If no buildable project is available, the agent does not claim the code was compiled or the headers were observed on a running site"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "cors-headless-nextjs",
+      "prompt": "We're going headless with Umbraco 17. The Next.js front end will live at https://www.contoso.com (and http://localhost:3000 while devs work on it). Umbraco is at https://cms.contoso.com. The browser code calls the Content Delivery API directly and sends Accept-Language and Start-Item headers. Right now every call fails with a CORS error in Chrome. We also want the API locked down so random people can't scrape our content, and a dev suggested setting `\"PublicAccess\": false` with an ApiKey and putting the key in a NEXT_PUBLIC_ env var so the browser can send it. Please give me the appsettings and C# needed for CORS in Umbraco, and tell me if the API key plan is OK.",
+      "expected_output": "The agent states that Umbraco has no configuration setting for front-end or Delivery API CORS, and uses ASP.NET Core CORS: AddCors with a named policy listing exact origins (production origins from config, localhost in development only), applied via an UmbracoPipelineFilter PrePipeline or before app.UseUmbraco(), scoped to /umbraco/delivery/api. The policy allows the Delivery API's custom headers. The agent rejects shipping the API key to the browser, explains that the key also unlocks draft and preview content and that CORS does not stop non-browser scraping, and recommends server-side fetching in Next.js if the content must be private.",
+      "files": [],
+      "expectations": [
+        "The agent states or clearly implies there is no built-in Umbraco appsettings key for front-end or Delivery API CORS, and does not invent an `Umbraco:CMS:*` CORS setting",
+        "The solution registers a named ASP.NET Core CORS policy (`AddCors`/`AddPolicy`) and applies it with `UseCors` before `app.UseUmbraco()` or in an `UmbracoPipelineFilter` (`PrePipeline`)",
+        "The policy lists explicit origins (https://www.contoso.com, with localhost only in development or development config) and does not use `AllowAnyOrigin()`",
+        "The CORS policy is scoped to the Delivery API path (`/umbraco/delivery/api`), for example with `UseWhen` or endpoint-level policy, rather than applied to every request",
+        "The allowed headers include `Start-Item` and `Accept-Language` (explicitly listed or via AllowAnyHeader)",
+        "The agent advises against putting the Delivery API key in browser-exposed (NEXT_PUBLIC_) configuration",
+        "The agent explains that the Delivery API key also grants access to draft/preview content, and/or that CORS does not prevent non-browser clients from scraping",
+        "If no buildable project is available, the agent does not claim the CORS configuration was tested"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "member-only-area-with-downloads",
+      "prompt": "Umbraco 17, traditional Razor site. We need a 'Partner portal': a section of pages only members in the 'Partners' member group can see. Partners also download price-list PDFs that editors upload to the Media section and link from those pages. There's also a small API controller at /api/partner/orders (inherits UmbracoApiController-style ControllerBase with [ApiController]) that returns the current partner's orders as JSON and must only work for logged-in Partners. Members register themselves through a form and should land in the Partners group only after we approve them. Walk me through how to set this up end to end, with code for the controller.",
+      "expected_output": "The agent configures group-based Public Access on the portal root (login page and no-access page), and protects the API controller with [UmbracoMemberAuthorize] restricting to the Partners group (arguments in allowType, allowGroup, allowMembers order). It warns that public access does not protect /media files, because they are served as static files before authentication, and gives a fix: a member-authorized download controller, or storage outside the public media path. Registration uses the built-in UmbRegisterController; members are unapproved until an editor approves them, and group assignment is done in code (for example a MemberSavedNotification handler) or by the approver.",
+      "files": [],
+      "expectations": [
+        "The agent uses Umbraco's group-based Public Access on the portal section, naming a login page and a no-access/error page",
+        "The API controller is protected with `[UmbracoMemberAuthorize]` restricted to the Partners group, with the group in the second (allowGroup) argument or the named AllowGroup property",
+        "The agent explicitly warns that Public Access does not protect media files under /media (they are served as static files and can be downloaded by URL)",
+        "The agent gives a concrete fix for the PDFs, such as a member-authorized download controller/endpoint or storing files outside the public media path",
+        "The agent addresses approval: new members are not approved (cannot log in) until approved, and group assignment to Partners happens on or after approval rather than automatically on registration",
+        "The answer uses Umbraco's built-in member surface controllers (UmbRegisterController / UmbLoginController) or IMemberManager / MemberSignInManager for login and registration, rather than checking passwords manually through IMemberService",
+        "If no buildable project is available, the agent does not claim the code was compiled or tested"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "production-behind-front-door",
+      "prompt": "We just moved our Umbraco 17 site to Azure App Service behind Azure Front Door (Front Door terminates TLS and forwards to the app). Three problems: (1) after adding app.UseHttpsRedirection() we get ERR_TOO_MANY_REDIRECTS, (2) password-reset emails from the backoffice contain http:// links to the *.azurewebsites.net hostname, (3) when we set Umbraco:CMS:Runtime:Mode to Production the site won't start at all. We also want to restrict /umbraco to our office IPs (Front Door has a WAF), and our Next.js app uses the Delivery API on the same host. What's going on and what exactly should we change?",
+      "expected_output": "The agent diagnoses that the app sees HTTP because Front Door terminates TLS, so UseHttpsRedirection loops. The fix is ForwardedHeaders (X-Forwarded-Proto/For/Host) configured with known proxies/networks and app.UseForwardedHeaders() called first, plus redirecting in only one layer. It sets WebRouting:UmbracoApplicationUrl to the public https URL to fix the email links, and explains that Production runtime mode refuses to boot without UseHttps=true and UmbracoApplicationUrl (and also needs a Release build, Models Builder mode Nothing, no runtime Razor compilation). For the IP restriction, it warns that /umbraco also hosts the Delivery API (/umbraco/delivery/api), so the WAF rule must exempt it, or the Next.js app breaks.",
+      "files": [],
+      "expectations": [
+        "The agent explains the redirect loop: Front Door terminates TLS so the app sees HTTP requests, and the fix is ASP.NET Core forwarded headers (`UseForwardedHeaders` with X-Forwarded-Proto) placed before `UseHttpsRedirection`/`app.UseUmbraco()`",
+        "The forwarded-headers advice restricts trust to the proxy (KnownProxies/KnownNetworks, or the Front Door ID/IP ranges) or explicitly warns about trusting forwarded headers from any source",
+        "The agent sets `Umbraco:CMS:WebRouting:UmbracoApplicationUrl` to the public https URL to fix the http:// links in emails",
+        "The agent states that Production runtime mode refuses to start unless `Umbraco:CMS:Global:UseHttps` is true and `UmbracoApplicationUrl` is set",
+        "The agent mentions at least one of the other Production-mode boot requirements: Release build (JIT optimizer), Models Builder mode `Nothing`, or Razor runtime compilation disabled",
+        "The agent warns that restricting `/umbraco` by IP would also block the Delivery API at `/umbraco/delivery/api` and says to exempt it",
+        "If no running environment is available, the agent does not claim the fix was deployed or verified"
+      ]
+    }
+  ]
+}
