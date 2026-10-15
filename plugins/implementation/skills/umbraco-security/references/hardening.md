@@ -10,8 +10,7 @@ list and the files changed.
 - [Lock down access to the Umbraco folder](https://docs.umbraco.com/umbraco-cms/run-in-production/security/lock-access-to-umbraco-folder.md):
   locking down `/umbraco` by IP on IIS.
 - [Umbraco security settings](https://docs.umbraco.com/umbraco-cms/run-in-production/security/security-settings.md):
-  pointers to password, routing and Forms settings. Its routing key name is out of date; use
-  item 5 below.
+  pointers to password, routing and Forms settings (see *Docs corrections*).
 - [Health Check](https://docs.umbraco.com/umbraco-cms/run-in-production/infrastructure-and-ops/health-check.md):
   run it first, and treat its results as the starting backlog.
 
@@ -79,10 +78,8 @@ list and the files changed.
 11. **Cookies:** the session cookie is `UMB_SESSION`. Umbraco registers it HttpOnly. To force
     `Secure`, add your own `builder.Services.AddSession(...)` call; the last registration wins.
     Put it after the `CreateUmbracoBuilder()...Build();` chain and **before**
-    `WebApplication app = builder.Build();`. That is what the
-    [cookies page](https://docs.umbraco.com/umbraco-cms/run-in-production/security/cookies.md)
-    means by "after `Build()`": services can't be added once `builder.Build()` has run. List the
-    backoffice cookies in the site's cookie policy.
+    `WebApplication app = builder.Build();` (see *Docs corrections*). List the backoffice cookies
+    in the site's cookie policy.
 12. **Staging and preview environments:** front-end
     [basic authentication](https://docs.umbraco.com/umbraco-cms/run-in-production/security/basic-authentication.md)
     or IP restriction, plus `noindex`. Never reuse the production Delivery API key.
@@ -107,3 +104,18 @@ list and the files changed.
 17. **Regulated hosting:** follow the
     [FIPS setup](https://docs.umbraco.com/umbraco-cms/run-in-production/security/setup-umbraco-for-a-fips-server.md)
     only if the user says the server must be FIPS-compliant.
+
+## Docs corrections
+
+Where the docs pages and Umbraco 17 disagree, or read ambiguously, follow this list:
+
+- **[Security settings](https://docs.umbraco.com/umbraco-cms/run-in-production/security/security-settings.md)**
+  names `DisableFindContentByIdPath`. That property was removed; the setting is
+  `WebRouting:DisableFindContentByIdentifierPath` (item 5).
+- **[Cookies](https://docs.umbraco.com/umbraco-cms/run-in-production/security/cookies.md)** says to
+  add the `AddSession` call "after `Build()`". It means after the
+  `CreateUmbracoBuilder()...Build();` chain. Calling it after `WebApplication app =
+  builder.Build();` throws, because the service collection is read-only by then (item 11).
+- **[Lock down access to the Umbraco folder](https://docs.umbraco.com/umbraco-cms/run-in-production/security/lock-access-to-umbraco-folder.md)**
+  is current: its rule already exempts `umbraco/api`, `umbraco/surface` and `umbraco/delivery`.
+  Its load-balancer variant trusts `X-Forwarded-For`; see item 4 for when that's safe.

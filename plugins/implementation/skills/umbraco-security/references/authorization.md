@@ -18,10 +18,11 @@ API access, and what editors may do in the backoffice.
 - Public access is set per content node in the backoffice (**Public access**: group-based or
   member-based), with a login page and a no-access page. Children inherit it. Group-based rules
   are easier to maintain than lists of individual members.
-- **Public access does not protect media files.** Umbraco serves `/media/...` through the static
-  file middleware, which runs before routing and authentication. A PDF linked from a protected
-  page can be downloaded by anyone who has the URL. If files must be private, serve them through
-  a controller that checks the member (below), or store them outside the public media path.
+- **Public access does not protect media or other static files.** Umbraco serves `/media/...`, and
+  anything under `wwwroot`, through the static file middleware, which runs before routing and
+  authentication. A PDF linked from a protected page can be downloaded by anyone who has the URL.
+  If files must be private, serve them through a controller that checks the member (below), and
+  store them outside `wwwroot` and the public media path.
 - Hiding a link is not protection, but showing links members can't open is poor UX. In
   navigation, use `IMemberManager.IsProtectedAsync(path)` and `MemberHasAccessAsync(path)` (with
   overloads that take many paths, to avoid N calls).
