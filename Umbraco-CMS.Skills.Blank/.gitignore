@@ -491,3 +491,6 @@ umbraco-package-schema.json
 # standing in for the files a user drops into these folders by hand.
 /Views/Partials/
 /Views/Shared/
+
+# Written at start-up by the umbraco-backoffice-localization example (App_Plugins)
+/App_Plugins/Skills.Localization*/
