@@ -63,6 +63,13 @@ public class AdditionalCulturesTests
     {
         ILanguageService languageService = Services.GetRequiredService<ILanguageService>();
 
+        // The test database is reused across runs; an interrupted earlier run can leave the language
+        // behind, and CreateAsync would then fail with DuplicateIsoCode on every later run.
+        if (await languageService.GetAsync(AdditionalIsoCode) is not null)
+        {
+            await DeleteAsync(languageService);
+        }
+
         Attempt<ILanguage, LanguageOperationStatus> created = await languageService.CreateAsync(
             new Language(AdditionalIsoCode, AdditionalIsoCode),
             Constants.Security.SuperUserKey);
@@ -77,8 +84,17 @@ public class AdditionalCulturesTests
             // Other fixtures share this host; leave its languages as the install left them.
             if (created.Success)
             {
-                await languageService.DeleteAsync(AdditionalIsoCode, Constants.Security.SuperUserKey);
+                await DeleteAsync(languageService);
             }
         }
+    }
+
+    private static async Task DeleteAsync(ILanguageService languageService)
+    {
+        Attempt<ILanguage?, LanguageOperationStatus> deleted =
+            await languageService.DeleteAsync(AdditionalIsoCode, Constants.Security.SuperUserKey);
+
+        Assert.That(deleted.Success, Is.True,
+            $"deleting the '{AdditionalIsoCode}' language failed with {deleted.Status}");
     }
 }

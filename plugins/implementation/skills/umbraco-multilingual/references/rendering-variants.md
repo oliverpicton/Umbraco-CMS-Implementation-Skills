@@ -38,11 +38,24 @@ A blank value in a non-default culture renders as empty unless you ask for fallb
 never falls back. Use `Fallback` or `string.IsNullOrWhiteSpace`. The same applies to pickers, which
 return an empty collection rather than `null`.
 
-## Culture-less contexts: controllers, jobs, notification handlers
+## Outside page rendering: controllers, jobs, notification handlers
 
-Outside a routed front-end request (Surface/API controllers, background jobs, notification handlers),
-nothing sets the variation context, so `IPublishedContent` resolves to the **default** language. Set
-it explicitly:
+Which culture `IPublishedContent` reads in depends on where the code runs:
+
+- **Any HTTP request** (Surface and API controllers included) gets a variation context from Umbraco's
+  request middleware. On a routed page it's the culture of the matched domain; on an unrouted API
+  call it's the **default** language, whatever culture the caller meant.
+- **Outside a request** (background jobs, notification handlers fired from a job) there is no
+  variation context. Culture lookups fall back to an empty string, so culture-variant values come
+  back **empty**, not in the default language, with no error.
+
+So don't rely on the ambient culture in either case. **Inside a request**, pass the culture to each
+call: `content.Value("title", culture)`, `content.Url(culture)`. Changing the request's variation
+context leaks into the rest of it: a SurfaceController POST on `/en/contact` that switches to `da-DK`
+and returns `CurrentUmbracoPage()` re-renders the English URL with Danish values and dictionary items.
+
+**Outside a request**, where many reads need one culture, set the variation context and restore the
+previous one when done:
 
 ```csharp
 using Umbraco.Cms.Core.Models.PublishedContent;
@@ -51,14 +64,22 @@ public class MyService(IVariationContextAccessor variationContextAccessor)
 {
     public void RenderFor(string culture)
     {
+        VariationContext? previous = variationContextAccessor.VariationContext;
         variationContextAccessor.VariationContext = new VariationContext(culture);
-        // IPublishedContent reads below now resolve in `culture`.
+        try
+        {
+            // IPublishedContent reads here resolve in `culture`.
+        }
+        finally
+        {
+            variationContextAccessor.VariationContext = previous;
+        }
     }
 }
 ```
 
-Or pass the culture to each call: `content.Value("title", culture)`, `content.Url(culture)`. Take the
-culture from the request (route, domain, query string), never from a hardcoded list.
+Either way, take the culture from the request (route, domain, query string) or from the site's
+languages (`ILanguageService.GetAllAsync()`), never from a hardcoded list.
 
 ## Dictionary items: fixed UI strings
 
@@ -98,8 +119,9 @@ rendering needs no filtering or culture code:
   `Model.Value<BlockListModel>("blocks", fallback: Fallback.ToLanguage)`. Without the fallback
   argument it stays hidden. Use it only when "show the English block until it's translated" is what
   the site wants.
-- In culture-less contexts (controllers, jobs), set the variation context first, as above. Blocks
-  follow it.
+- Outside page rendering (controllers, jobs), blocks resolve in the **variation context's** culture,
+  not a culture passed to `Value`. To read blocks in another culture, set the variation context and
+  restore it in a `finally`, as above, even inside a request.
 
 ## Done
 

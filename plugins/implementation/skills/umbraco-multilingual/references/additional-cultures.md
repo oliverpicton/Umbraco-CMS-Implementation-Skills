@@ -18,8 +18,10 @@ an ordinary language needs no code; see [languages-and-variants.md](languages-an
 ## Fix
 
 Fetch [Adding Additional Languages](https://docs.umbraco.com/umbraco-cms/extend-your-project/server-side-extensions/language-files/adding-additional-languages.md)
-first, then copy [`assets/AllowAdditionalCulturesComposer.cs`](../assets/AllowAdditionalCulturesComposer.cs).
-It is the docs' composer. Substitute `<Namespace>` and `<AdditionalIsoCode>`, the missing culture's
+first. **The docs page is authoritative**: write the composer from it. If you can't fetch it, fall
+back to [`assets/AllowAdditionalCulturesComposer.cs`](../assets/AllowAdditionalCulturesComposer.cs),
+a copy of the docs' composer kept so this repo's runtime gate can compile and test it; where the two
+differ, the docs win. Substitute `<Namespace>` and `<AdditionalIsoCode>`, the missing culture's
 ISO code, e.g. `zh-HK`; add more array entries if several are missing. The composer replaces both
 services with wrappers that accept the listed codes as well as everything the defaults accept.
 
