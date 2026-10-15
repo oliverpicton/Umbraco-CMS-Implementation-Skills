@@ -3,8 +3,7 @@ name: umbraco-security
 description: >
   Secures Umbraco 17+ sites: HTTPS and reverse proxies, security headers and CSP, CORS for
   headless front ends, backoffice user and member authentication, authorization and protected
-  content, and production hardening. Routes each task to a reference file naming the docs page to
-  fetch and the traps those docs miss. Use this whenever the user asks to secure, harden or
+  content, and production hardening. Use this whenever the user asks to secure, harden or
   security-review an Umbraco site, fix pen-test or security health check findings, add a Content
   Security Policy or security headers, fix a blank backoffice after adding a CSP, force HTTPS or
   fix a redirect loop behind Azure Front Door, Cloudflare or a load balancer, find out why
@@ -16,16 +15,15 @@ description: >
 
 # Umbraco Security
 
-An index for security work on an Umbraco site. Each row points at one reference file. The file
-names the docs page that is the source of truth, then adds what those pages leave out: where the
-code goes in Umbraco's pipeline, which settings interact, and the mistakes that make a site look
-secured without being secured.
+An index for security work on an Umbraco site. Each row points at one reference file, which adds
+what the docs pages leave out: where the code goes in Umbraco's pipeline, which settings
+interact, and the mistakes that make a site look secured without being secured.
 
 ## How to use this index
 
 - **Building a feature** (add CSP, enable CORS, add SSO): open the one matching reference file,
   fetch the docs page it names, then implement. The reference files give no full code samples
-  on purpose: the docs carry the current API, and the reference file says what to check in it.
+  on purpose: the docs carry the current API.
 - **Auditing or hardening a site:** read [hardening.md](references/hardening.md) first. It is the
   checklist, and it links back to the other files for each item that fails.
 - **A health check is failing:** the Health Check dashboard's security checks map to
@@ -60,9 +58,8 @@ secured without being secured.
 - **Prove it on the wire.** A security change is done when an HTTP request shows it: the header
   is present, the redirect happens, the protected URL returns 401/403. A compiled change is not
   proof. Check `/umbraco` and a media URL as well as a content page.
-- **Secrets stay out of `appsettings.json` in source control.** Delivery API keys, client
-  secrets and SMTP passwords belong in user secrets, environment variables or a vault (see
-  [hardening.md](references/hardening.md)).
+- **Secrets stay out of `appsettings.json` in source control.** See
+  [hardening.md](references/hardening.md) item 7 for what counts and where it goes.
 - **Report honestly.** If the site could not be run, say which checks were not made rather than
   describing the configuration as verified.
 

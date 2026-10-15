@@ -38,21 +38,19 @@ use the Delivery API, and a server-side integration should use an API user (see
    `Accept-Language`, `Accept-Segment` and `Start-Item`, plus `Authorization` for member access
    tokens and `Content-Type` for JSON bodies. A missing header shows up as a preflight failure and
    is commonly misread as an auth bug. Leave out `Api-Key` and `Preview`. They belong to
-   server-side callers (see below), and allowing them from the browser invites someone to put the
-   key there.
+   server-side callers, and allowing them from the browser invites someone to put the key there.
+   To show private or preview content, call the API from the front end's server side and keep
+   the key there (see [authorization.md](authorization.md)).
 6. **Credentials:** `AllowCredentials()` only if the browser must send cookies. ASP.NET Core
    rejects it combined with `AllowAnyOrigin()`. Bearer tokens in `Authorization` don't need it.
+   Don't work around that rejection with `SetIsOriginAllowed(_ => true)` plus `AllowCredentials()`:
+   that lets any site read responses made with the member's cookies.
 
 ## Misconceptions to correct
 
 - **CORS is not access control.** It only governs what *browsers* let scripts read. `curl`,
   server-side code and attackers ignore it. Protecting content is the job of the Delivery API key
   or member authorization ([authorization.md](authorization.md)).
-- **Never put the Delivery API key in browser code to make CORS "work".** The same key unlocks
-  draft and preview content. If content must be private, call the API from the front end's server
-  side and keep the key there.
-- `AllowAnyOrigin()` on an endpoint that reads cookies or member sessions is a vulnerability,
-  not a convenience.
 
 ## Verify
 
@@ -60,7 +58,7 @@ use the Delivery API, and a server-side integration should use an API user (see
 curl -i -X OPTIONS https://<site>/umbraco/delivery/api/v2/content \
   -H "Origin: https://www.example.com" \
   -H "Access-Control-Request-Method: GET" \
-  -H "Access-Control-Request-Headers: api-key,accept-language"
+  -H "Access-Control-Request-Headers: authorization,accept-language"
 ```
 
 The response should include `Access-Control-Allow-Origin: https://www.example.com` and the

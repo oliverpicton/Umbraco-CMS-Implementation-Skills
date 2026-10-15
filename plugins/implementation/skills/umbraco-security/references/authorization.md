@@ -8,9 +8,7 @@ API access, and what editors may do in the backoffice.
 - **Public access** (protecting content for members or member groups): the "Member-only pages"
   section of [Member registration and login](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/tutorials/members-registration-and-login.md)
 - **Delivery API access:** `PublicAccess` and `ApiKey` in
-  [Content Delivery API](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/headless-and-apis/content-delivery-api/README.md);
-  member tokens in
-  [Protected content in the Delivery API](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/headless-and-apis/content-delivery-api/protected-content-in-the-delivery-api/README.md)
+  [Content Delivery API](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/headless-and-apis/content-delivery-api/README.md)
 - **Backoffice permissions:** [Users](https://docs.umbraco.com/umbraco-cms/manage-and-publish-content/users-and-members/users/README.md)
   (user groups, sections, start nodes, granular permissions) and
   [Sensitive data](https://docs.umbraco.com/umbraco-cms/run-in-production/security/sensitive-data-on-members.md)
@@ -44,7 +42,7 @@ opts that action out. Never check a member's group by hand from a query-string o
   and a member access token (see [authentication-members.md](authentication-members.md)).
 - `DeliveryApi:PublicAccess: false` makes the entire API require the `Api-Key` header. The same
   `ApiKey` also unlocks **preview (draft) content**, so treat it as a server-side secret. Never
-  ship it in browser JavaScript or a mobile app binary, and don't commit it to `appsettings.json`.
+  ship it in browser JavaScript or a mobile app binary.
 - Use `AllowedContentTypeAliases` / `DisallowedContentTypeAliases` to keep internal document types
   (settings nodes, form configuration) out of the API completely. That beats relying on obscurity.
 
@@ -53,8 +51,6 @@ opts that action out. Never check a member's group by hand from a query-string o
 - Grant through **user groups**: sections, content and media start nodes, document-level granular
   permissions. Don't grant to individuals. Give editors the least access they need. Only
   administrators should reach Settings and Users.
-- API users get permissions through their user group too. Scope the group to the integration's
-  job.
 - Member fields marked **sensitive** are hidden from users outside the "Sensitive data" group.
   Use this for personal data (date of birth, addresses) and keep that group small.
 

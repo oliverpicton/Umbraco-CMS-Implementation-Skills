@@ -15,7 +15,6 @@ backoffice editors, see [authentication-users.md](authentication-users.md).
 | Two-factor authentication | [Two-factor authentication](https://docs.umbraco.com/umbraco-cms/run-in-production/security/two-factor-authentication.md), "Members" section |
 | Headless login (SPA, mobile, Next.js) | [Protected content in the Delivery API](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/headless-and-apis/content-delivery-api/protected-content-in-the-delivery-api/README.md) |
 | Server-to-server access to protected content | [Server-to-server access](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/headless-and-apis/content-delivery-api/protected-content-in-the-delivery-api/server-to-server-access.md) |
-| Hide member fields from editors | [Sensitive data](https://docs.umbraco.com/umbraco-cms/run-in-production/security/sensitive-data-on-members.md) |
 
 ## Razor sites: what trips people up
 
@@ -33,7 +32,6 @@ backoffice editors, see [authentication-users.md](authentication-users.md).
   necessarily the public.
 - **Group assignment on registration** is code (a `MemberSavedNotification` handler in the
   tutorial). Without it, public-access rules that check a group never match a new member.
-- Pages that vary per member must not be output-cached or CDN-cached as shared responses.
 
 ## Headless sites (Delivery API member authorization)
 
@@ -45,7 +43,7 @@ backoffice editors, see [authentication-users.md](authentication-users.md).
 - The client uses Authorization Code + PKCE with `client_id` `umbraco-member`. The login page is
   an Umbraco-rendered page, at `/Account/Login` by default; the docs show how to move it.
   The docs warn against public OIDC clients in web apps. For a server-rendered front end, prefer
-  a confidential, server-side flow or [server-to-server access](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/headless-and-apis/content-delivery-api/protected-content-in-the-delivery-api/server-to-server-access.md).
+  a confidential, server-side flow or server-to-server access (see the table above).
 - A SPA on another origin also needs CORS for the token and API calls
   ([cors.md](cors.md)).
 

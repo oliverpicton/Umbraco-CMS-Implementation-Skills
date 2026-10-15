@@ -20,8 +20,7 @@ technology stack. Umbraco's Health Check dashboard reports on each of these.
 Headers must be set before the response starts, so add the middleware **before**
 `app.UseUmbraco()` in `Program.cs`. For something reusable or packaged, add it in an
 `UmbracoPipelineFilter`'s `PrePipeline`, registered from a composer through
-`Configure<UmbracoPipelineOptions>`. Either slot runs for every request, including static files,
-media and the backoffice. Middleware added **after** `UseUmbraco()` never sees most requests.
+`Configure<UmbracoPipelineOptions>`. Middleware added **after** `UseUmbraco()` never sees most requests.
 
 ## The rules the docs don't spell out
 
@@ -59,5 +58,5 @@ media and the backoffice. Middleware added **after** `UseUmbraco()` never sees m
 - Sign in to the backoffice with the browser console open and confirm there are no CSP violations.
 - The Health Check dashboard's security group passes.
 
-**Related:** [https.md](https.md), [cors.md](cors.md) (CORS is not a security header and doesn't
+**Related:** [cors.md](cors.md) (CORS is not a security header and doesn't
 replace one).

@@ -1,8 +1,9 @@
 # Hardening checklist
 
-Work through this list when auditing a site or preparing it for production. Each item names the
-docs page to fetch, or the reference file that covers it in depth. Report every item as **done**,
-**not applicable** (with the reason), or **needs the user** (a decision or access you don't have).
+Work through this list when auditing a site or preparing it for production. Report every item as
+**done**, **not applicable** (with the reason), or **needs the user** (a decision or access you
+don't have, such as IP ranges, IdP registration or hosting configuration). End with that status
+list and the files changed.
 
 ## Fetch first
 
@@ -64,8 +65,3 @@ docs page to fetch, or the reference file that covers it in depth. Report every 
 14. **Regulated hosting:** follow the
     [FIPS setup](https://docs.umbraco.com/umbraco-cms/run-in-production/security/setup-umbraco-for-a-fips-server.md)
     only if the user says the server must be FIPS-compliant.
-
-## Done
-
-Give the user the checklist with each item's status, the files changed, and any items that need
-their decision or access (IP ranges, IdP registration, hosting configuration).

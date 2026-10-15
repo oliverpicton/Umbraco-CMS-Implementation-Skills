@@ -26,9 +26,9 @@ redirect, because two layers that disagree produce redirect loops.
 
 ## Production runtime mode enforces it
 
-With `Umbraco:CMS:Runtime:Mode` set to `Production`, Umbraco's runtime-mode validators refuse to
-boot unless `Global:UseHttps` is `true` **and** `WebRouting:UmbracoApplicationUrl` is set. A
-"site won't start after switching to Production" report is usually one of these two settings.
+A site that won't start after switching to Production is usually missing `Global:UseHttps: true`
+or `WebRouting:UmbracoApplicationUrl`. The full list of boot requirements is in
+[hardening.md](hardening.md) item 1.
 
 ## Behind TLS-terminating proxies (Azure Front Door, App Gateway, Cloudflare, nginx, Docker)
 
