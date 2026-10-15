@@ -487,7 +487,9 @@ umbraco-package-schema.json
 /Views/*.cshtml
 !/Views/_ViewImports.cshtml
 
-# Partials and view-component views copied in at RUNTIME by example harnesses (umbraco-templating),
-# standing in for the files a user drops into these folders by hand.
+# Partial views and view-component views written at RUNTIME, standing in for the files a user
+# drops into these folders by hand: copied in by example harnesses (umbraco-templating), or
+# installed from a package's <PartialViews><View path="…"> entries (umbraco-multilingual's
+# languageSwitcher/hreflangLinks partials).
 /Views/Partials/
 /Views/Shared/
