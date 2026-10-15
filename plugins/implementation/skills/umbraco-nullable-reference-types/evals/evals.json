@@ -13,7 +13,8 @@
         "CurrentPage is treated as nullable (it is declared `IPublishedContent?`), e.g. guarded with a null check that returns NotFound()/an error result, rather than dereferenced directly or suffixed with `!`",
         "The CS8618 errors on ArticlePageViewModel are resolved with `required` members, property initialisers (e.g. `= string.Empty`), a constructor, or by making genuinely optional members nullable (e.g. `string? HeroImageUrl`)",
         "The agent explains that `!` or `#nullable disable` only hides the warning and the code still throws a NullReferenceException at runtime when an editor leaves the field empty",
-        "If a real buildable project is available, dotnet build succeeds with no nullable warnings; if not, the agent does not claim to have compiled, built or run the code, and explicitly states whether it expects the fix to compile warning-free against the Umbraco APIs it used"
+        "The agent does not claim to have compiled, built or run the code unless the transcript shows it actually did (if a buildable project is available and it builds, dotnet build succeeds with no nullable warnings)",
+        "The answer states in plain words whether the agent expects the fix to compile with no nullable warnings, and names anything it could not confirm (for example an assumed signature or a needed `using`) — a bare 'please build and check' does not count"
       ]
     },
     {
@@ -23,12 +24,13 @@
       "files": [],
       "expectations": [
         "The agent identifies the root cause: a hosted/background service runs outside an HTTP request, so no Umbraco context exists and GetRequiredUmbracoContext() throws InvalidOperationException",
-        "The fix injects IUmbracoContextFactory and calls EnsureUmbracoContext(), disposing the returned UmbracoContextReference with a `using` statement or declaration, and reads content via its `.UmbracoContext.Content`",
-        "The `using` around EnsureUmbracoContext() is scoped per run (inside the loop or a per-iteration method), not held for the lifetime of the service",
+        "The fix obtains content without a request context in one of the two valid v17 ways: (a) injects IUmbracoContextFactory and calls EnsureUmbracoContext(), disposing the returned UmbracoContextReference with `using`, or (b) injects the singleton IPublishedContentCache and calls GetById/GetByIdAsync on it directly. Either passes; still using IUmbracoContextAccessor for the lookup fails",
+        "If EnsureUmbracoContext() is used, its `using` is scoped per run (inside the loop or a per-iteration method), not held for the lifetime of the service; if IPublishedContentCache is injected instead, no Umbraco context is held across runs",
         "The agent does not present try/catch around the original code, or TryGetUmbracoContext returning false and skipping the run, as the fix; it explains that either would leave the job silently doing nothing in production",
         "The result of Content.GetById(...) is null-checked (e.g. log a warning and skip/continue when the settings node is missing or unpublished) rather than dereferenced directly or suffixed with `!`",
-        "The `!` on Value<string>(\"openingHours\") is removed and the possibly-null value is handled (null check, `??` fallback or skip) before calling ToUpper(), and the nullable phone value is handled to match the API's parameter type",
-        "If a real buildable project is available, dotnet build succeeds with no nullable warnings; if not, the agent does not claim to have compiled, built or run the code, and explicitly states whether it expects the fix to compile warning-free against the Umbraco APIs it used"
+        "The `!` on Value<string>(\"openingHours\") is removed and the possibly-null value is handled (null check, `??` fallback or skip) before calling ToUpper()",
+        "The agent does not claim to have compiled, built or run the code unless the transcript shows it actually did (if a buildable project is available and it builds, dotnet build succeeds with no nullable warnings)",
+        "The answer states in plain words whether the agent expects the fix to compile with no nullable warnings, and names anything it could not confirm (for example an assumed signature or a needed `using`) — a bare 'please build and check' does not count"
       ]
     },
     {
@@ -43,7 +45,8 @@
         "The author byline uses null-safe access on the picked node (`author?.Name`, an `is not null` guard, or a fallback such as a default author name) and handles the possibly-null jobTitle string instead of calling `.ToUpper()` on it directly",
         "In the partial, each item's thumbnail MediaWithCrops and teaserTitle string are handled as possibly null (guard, `?.` or `??` fallback e.g. to item.Name) rather than dereferenced directly",
         "No null-forgiving operator (`!`) and no `#nullable disable` is added to either .cshtml file",
-        "If a real buildable project is available, dotnet build succeeds with no nullable warnings; if not, the agent does not claim to have compiled, built or run the code, and explicitly states whether it expects the fix to compile warning-free against the Umbraco APIs it used"
+        "The agent does not claim to have compiled, built or run the code unless the transcript shows it actually did (if a buildable project is available and it builds, dotnet build succeeds with no nullable warnings)",
+        "The answer states in plain words whether the agent expects the fix to compile with no nullable warnings, and names anything it could not confirm (for example an assumed signature or a needed `using`) — a bare 'please build and check' does not count"
       ]
     }
   ]

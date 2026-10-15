@@ -52,15 +52,20 @@ Read only the files the code in front of you touches. A compiled, tested example
   usually simpler.
 - **Use the `Try*` accessors and act on `false`.** `TryGetUmbracoContext` / `TryGetUmbracoHelper`
   are annotated so the `out` value is non-null when they return `true`. Don't call
-  `GetRequiredUmbracoContext()` where there may be no request — use
-  `IUmbracoContextFactory.EnsureUmbracoContext()` in a `using`, scoped to one unit of work.
+  `GetRequiredUmbracoContext()` where there may be no request. Instead, inject the singleton
+  `IPublishedContentCache` for plain content lookups, or use
+  `IUmbracoContextFactory.EnsureUmbracoContext()` in a `using` scoped to one unit of work.
 - **Prefer the `Parent()` / `Children()` extensions** over the `[Obsolete]` `IPublishedContent.Parent`
   / `.Children` properties (removal scheduled for v18).
 - **Don't assume views are checked.** With InMemoryAuto models, Razor views compile at runtime
   without nullable analysis, so a clean build says nothing about your `.cshtml`. Apply the same rules
   by hand.
-- **Never claim a build passed that you didn't run.** If you can't compile, say which CS86xx errors
-  the change is expected to remove.
+- **Never claim a build passed that you didn't run.** If you can't compile, say so, then state
+  plainly whether you expect the change to build with no nullable warnings, and name anything you
+  couldn't confirm, such as an assumed signature or a missing `using`.
+- **Include the `using` directives** in the code you hand back. `UmbracoContextReference` is in
+  `Umbraco.Cms.Core`, and `MediaWithCrops` is in `Umbraco.Cms.Core.Models`. Either one missing
+  breaks the build even when the null handling is right.
 
 ## Version compatibility
 

@@ -110,6 +110,27 @@ public sealed class ContentNameLookup
 }
 ```
 
+### Simpler when you only need content: inject `IPublishedContentCache`
+
+On v17, `IPublishedContentCache` is registered as a **singleton**
+(`Umbraco.PublishedCache.HybridCache/DependencyInjection/UmbracoBuilderExtensions.cs`), and its
+`GetById` / `GetByIdAsync` overloads need no request or `UmbracoContext`. If a background job only
+looks content up by key or id and reads property values, inject it directly. The result is still
+`IPublishedContent?`, so the null check stays.
+
+```csharp
+IPublishedContent? settings = await _contentCache.GetByIdAsync(settingsKey);
+if (settings is null)
+{
+    _logger.LogWarning("Settings node {Key} is missing or unpublished; skipping run", settingsKey);
+    return;
+}
+```
+
+Use `EnsureUmbracoContext()` when the code needs the context itself, for example helpers that read
+the current `UmbracoContext`. Either fix is correct. What matters is that nothing borrows a request
+context that doesn't exist.
+
 `IPublishedContentQueryAccessor` warns against using it in background threads. Instead, create a DI
 scope and resolve `IPublishedContentQuery` from it after `EnsureUmbracoContext()`
 (`Umbraco.Infrastructure/IPublishedContentQueryAccessor.cs`).
