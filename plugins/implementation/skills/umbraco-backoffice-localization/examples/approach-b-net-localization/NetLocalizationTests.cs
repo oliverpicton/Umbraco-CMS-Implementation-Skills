@@ -12,8 +12,8 @@ namespace Umbraco_CMS.Skills.TestHost;
 /// NotificationTextProvider registered by the skill's own composer.
 ///
 /// Each test pins one claim the skill makes that the docs leave out or that a model gets wrong: a new
-/// area is added, a core key is replaced only when its case is exact, tokens use %0%, there is no
-/// fallback to English, and an explicit culture beats the thread's.
+/// area is added, a core key is replaced only when its case is exact, tokens use %0%, a missing key
+/// falls back to English, and an explicit culture beats the thread's.
 /// </summary>
 [TestFixture]
 public class NetLocalizationTests
@@ -43,20 +43,24 @@ public class NetLocalizationTests
         Assert.That(Text.Localize(Area, "subject", Danish, new[] { "Ada" }), Is.EqualTo("Velkommen til sitet, Ada"));
     }
 
+    // The two core-key tests read keys the harness adds to its copy of en.user.xml
+    // (NetLocalizationExampleComposer.TestOnlyCoreOverrides), not the published asset.
+
     [Test]
     public void Core_key_is_replaced_when_the_alias_matches_exactly()
     {
-        Assert.That(Text.Localize("actions", "assigndomain", English), Is.EqualTo("Domains"),
-            "en.user.xml uses the core alias 'assigndomain'; its text must replace 'Culture and Hostnames'");
+        Assert.That(Text.Localize("login", "resetPasswordEmailCopySubject", English), Is.EqualTo("Skills: Reset your password"),
+            "the exact core alias must replace 'Umbraco: Reset Password'");
     }
 
     [Test]
     public void Core_key_is_not_replaced_by_a_near_miss_alias()
     {
-        // The docs sample spells the alias 'assignDomain'. Prove that is not the core key: it adds
-        // nothing useful, so the text a user would see stays untouched under the real alias.
-        Assert.That(Text.Localize("actions", "assignDomain", English), Is.EqualTo("[assignDomain]"),
-            "a differently-cased alias is a different key and is simply missing");
+        // 'resetcodeexpired' differs from the core 'resetCodeExpired' only by case. It is a second key,
+        // so the text a user would see stays untouched under the real alias.
+        Assert.That(Text.Localize("login", "resetCodeExpired", English),
+            Is.EqualTo("The link you have clicked on is invalid or has expired"),
+            "a differently-cased alias must not replace the core text");
     }
 
     [Test]

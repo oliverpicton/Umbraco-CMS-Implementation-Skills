@@ -8,7 +8,9 @@ namespace Umbraco.Skills.Examples.BackofficeLocalization.UiLocalization;
 ///
 /// A real user copies the skill's files into App_Plugins by hand. Here the host project is shared, so
 /// the same files are written from the embedded copies at start-up, before Umbraco reads App_Plugins.
-/// The folders are git-ignored in the host project.
+/// The folders are git-ignored in the host project. This runs on every boot of the Blank host, so its
+/// backoffice then says "Domains" for "Culture and Hostnames"; the umbraco-reference-instance skill
+/// lists these files and how to remove them.
 ///
 /// Also writes the skill's manifest into a NESTED folder, which the docs say is not registered. The
 /// test uses it as a control: it proves a manifest in the right place registers while an identical

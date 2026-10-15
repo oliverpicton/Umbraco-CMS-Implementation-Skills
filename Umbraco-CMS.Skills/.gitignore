@@ -482,4 +482,4 @@ umbraco-package-schema.json
 /wwwroot/media/
 
 # Written at start-up by the umbraco-backoffice-localization example (config/lang)
-/config/
+/config/lang/

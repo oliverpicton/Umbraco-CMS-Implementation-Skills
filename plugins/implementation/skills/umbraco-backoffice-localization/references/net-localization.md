@@ -47,8 +47,9 @@ These come from the Umbraco source (`LocalizedTextServiceFileSources`, `Localize
   never replace a core key, so a package should use its own area. A whole new area is simply added.
 - **Copy the core key exactly.** Alias matching is case-sensitive. Take the area and `alias` from
   [`en.xml` in the Umbraco-CMS source](https://github.com/umbraco/Umbraco-CMS/blob/main/src/Umbraco.Core/EmbeddedResources/Lang/en.xml), not from memory or from
-  the docs sample: the core alias for "Culture and Hostnames" is `assigndomain` (lowercase), while
-  the docs show `assignDomain`. A near miss adds a second, unused key and the core text stays.
+  the docs sample. The reset-password email subject, for example, is area `login`, alias
+  `resetPasswordEmailCopySubject`; `resetPasswordEmailCopysubject` is a near miss that adds a second,
+  unused key, and the core text stays.
 - **Culture is explicit or the thread's.** The two-argument `Localize(area, key)` uses the current
   thread's UI culture, which in a web request is the visitor's request culture, not the editor's
   backoffice language. For a message to a known recipient, pass that person's culture
