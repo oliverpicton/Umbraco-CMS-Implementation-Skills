@@ -35,8 +35,9 @@ A blank value in a non-default culture renders as empty unless you ask for fallb
 `Fallback.To(Fallback.Language, Fallback.Ancestors)` combines them in order.
 
 **`Value<string>` returns `""` for a blank value, not `null`**, so `Model.Value<string>("title") ?? "…"`
-never falls back. Use `Fallback` or `string.IsNullOrWhiteSpace`. The same applies to pickers, which
-return an empty collection rather than `null`.
+never falls back. Use `Fallback` or `string.IsNullOrWhiteSpace`. The same applies to multi-item
+pickers, which return an empty collection rather than `null`. Single-item Content and Media pickers
+*do* return `null` when empty, so keep the null check on those.
 
 ## Outside page rendering: controllers, jobs, notification handlers
 

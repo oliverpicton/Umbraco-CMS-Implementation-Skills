@@ -1,17 +1,17 @@
 ---
 name: umbraco-multilingual
 description: >
-  Use for any Umbraco 17+ work where content exists in more than one language (culture). Covers
-  setup and debugging: adding a language or market (languages, fallback, vary-by-culture Document
-  Types, Culture and Hostnames such as /de or a domain per country) without breaking existing
-  URLs; translating Block List, Block Grid or rich text blocks per language while keeping the same
-  blocks and order (block level variance); blank translated fields that should fall back to
-  another language; a controller, SurfaceController or background job returning the wrong culture;
-  translating hardcoded view text (button labels, UI strings) with dictionary items; a language
-  switcher and hreflang tags; migrations or packages whose imported languages, dictionary items or
-  cultures don't go live; a culture such as zh-HK missing from the Languages dropdown, especially
-  on Linux or Azure. SKIP: non-Umbraco apps, Umbraco 13 and earlier, translating the backoffice UI
-  or extension labels, and headless / Content Delivery API front ends.
+  Set up and debug multilingual Umbraco 17+ Razor sites, where content exists in more than one
+  language (culture). Covers languages and fallback, vary-by-culture Document Types, Culture and
+  Hostnames (/de or a domain per country) without breaking existing URLs, block level variance for
+  Block List/Grid and rich text blocks, dictionary items for hardcoded view text, a language
+  switcher and hreflang tags, and cultures such as zh-HK missing from the Languages dropdown. Also
+  diagnoses blank translated fields, controllers or background jobs returning the wrong culture,
+  and migrations or packages whose imported languages or dictionary items don't go live. Trigger:
+  "add Danish to the site", "make the site multilingual", "add a language switcher", "hreflang
+  tags", "translate the blocks per language", "the German page shows English text", "zh-HK isn't
+  in the languages list". SKIP: non-Umbraco apps, Umbraco 13 and earlier, translating the
+  backoffice UI or extension labels, and headless / Content Delivery API front ends.
 ---
 
 # Multilingual site
@@ -44,14 +44,19 @@ matches decides which one renders. Build it in this order, since each step depen
 ## Version compatibility
 
 Targets **Umbraco 17+**. Every API used here (`ILanguageService`, `IDomainService.UpdateDomainsAsync`,
-`IIsoCodeValidator`, `ICultureService`) exists on 17. Umbraco 13 and earlier have different
-language/domain APIs; don't apply this skill there.
+`IIsoCodeValidator`, `ICultureService`) exists on 17, with one exception: **language fallback for
+blocks** (`Value<BlockListModel>(..., fallback: Fallback.ToLanguage)` showing a block not exposed in
+the current language) needs **17.4+**. On 17.0–17.3 the argument is accepted but unexposed blocks
+stay hidden, with no error, so check the site's version before relying on it. Umbraco 13 and earlier
+have different language/domain APIs; don't apply this skill there.
 
 ## Best practices
 
-- **Never `ToLower()` a culture.** Keep ISO casing (`da-DK`) in code and config, and compare with
-  `StringComparison.OrdinalIgnoreCase`. Casing differs between sources (Examine stores culture field
-  suffixes lowercase, e.g. `__Published_da-dk`), so a case-sensitive comparison fails on some of them.
+- **Never lowercase a culture you pass to Umbraco APIs or emit in markup.** Keep ISO casing
+  (`da-DK`) in code and config, and compare with `StringComparison.OrdinalIgnoreCase`. The one
+  exception is **Examine field names**, whose culture suffixes are stored lowercase
+  (`__Published_da-dk`, `title_da-dk`): build those with `culture.ToLowerInvariant()`, or a query on
+  `__Published_da-DK` silently matches nothing.
 - **Don't hardcode culture lists.** Read them from `ILanguageService` or `IPublishedContent.Cultures`,
   so adding a language needs no code change.
 - **Set a fallback per language and decide mandatory deliberately.** A mandatory language blocks

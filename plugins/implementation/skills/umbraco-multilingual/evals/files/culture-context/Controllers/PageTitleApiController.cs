@@ -54,12 +54,9 @@ public class PageTitleApiController : ControllerBase
         IEnumerable<ILanguage> languages = await _languageService.GetAllAsync();
         ILanguage? language = languages.FirstOrDefault(l => l.IsoCode == lowered);
 
-        // TODO: this never finds German, even for ?culture=de-DE, so every request ends up on the
-        // default language below. Is the ISO code stored differently in the DB than it shows in
-        // Settings > Languages? Falling back to the default so the endpoint at least never 400s.
+        // Fall back to the default language so the endpoint never 400s.
         language ??= languages.First(l => l.IsDefault);
 
-        // TODO: and even when we did get a match (hardcoded "de-DE" to test) the title was still English.
         return Ok(new PageTitleResponse(
             content.Key,
             language.IsoCode,

@@ -30,7 +30,7 @@ namespace Acme.Web.Jobs;
 /// </summary>
 public class ProductFeedJob : IRecurringBackgroundJob
 {
-    // The cultures we write a feed for. Marketing want French next year; add it here when the time comes.
+    // The cultures we write a feed for.
     private static readonly string[] FeedCultures = new[] { "en-US", "de-DE" };
 
     private readonly IUmbracoContextFactory _umbracoContextFactory;
