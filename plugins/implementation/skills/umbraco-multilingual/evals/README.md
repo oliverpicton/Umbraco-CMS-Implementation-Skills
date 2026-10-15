@@ -146,11 +146,6 @@ expectations between rounds.
 | 5. Missing culture `zh-HK` (composer) | 8/8 | 7/8 | 8/8 | 8/8 |
 | **Mean pass rate** | **100%** (41/41) | **93%** (38/41) | **100%** (41/41) | **90%** (37/41) |
 
-haiku with_skill: tokens mean 111k, time mean 318s  secs=[335.0, 274.6, 329.7, 291.9, 357.7]
-haiku without_skill: tokens mean 125k, time mean 323s  secs=[332.2, 322.8, 358.1, 301.7, 299.7]
-sonnet with_skill: tokens mean 85k, time mean 277s  secs=[266.4, 218.4, 298.4, 334.4, 267.7]
-sonnet without_skill: tokens mean 94k, time mean 330s  secs=[341.6, 286.3, 373.2, 388.9, 257.7]
-
 Every edited project built with Razor compilation on (`razor-build.txt` exit 0 in all 24 runs, the
 20 of round 6 and the 4 eval 2 re-runs), so the build column proves the code compiles but does not
 separate the two sides. Each run also ran `dotnet build` itself at least once, which is why times
