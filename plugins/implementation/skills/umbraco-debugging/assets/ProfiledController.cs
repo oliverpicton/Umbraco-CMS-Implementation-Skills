@@ -1,3 +1,4 @@
+// Install as Controllers/ProfiledController.cs in the web project.
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Cms.Core.Logging;
 using Umbraco.Cms.Core.Services.Navigation;

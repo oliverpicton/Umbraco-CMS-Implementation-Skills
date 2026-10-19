@@ -1,3 +1,4 @@
+// Copy to .vscode/launch.json in the web project's folder (VS Code reads it as JSON with comments).
 {
   "version": "0.2.0",
   "configurations": [

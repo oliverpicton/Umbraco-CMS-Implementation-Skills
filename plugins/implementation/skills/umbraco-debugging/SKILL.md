@@ -28,6 +28,10 @@ Umbraco's code, SQL) without attaching a debugger at all.
 | What changes | IDE settings only (Source Link, symbol servers, Just My Code, JIT). Nothing in the project | `Umbraco:CMS:Hosting:Debug` in environment config, plus optional `IProfiler.Step` calls in your code |
 | Ships | [`assets/SourceLinkProbe.cs`](assets/SourceLinkProbe.cs) (an F11 target), [`assets/vscode-launch.json`](assets/vscode-launch.json) | [`assets/ProfiledController.cs`](assets/ProfiledController.cs) (nested `IProfiler` steps) |
 
+**Before answering or changing anything, open the reference for the approach you choose and start
+from its asset.** The traps are covered only there: the per-IDE setting names, the symbol server
+that Source Link depends on, and how profiling is gated.
+
 ### How to decide
 
 - The user wants to **see inside an Umbraco method**: a breakpoint in Umbraco code, F11 from their
