@@ -14,6 +14,20 @@
           }
         }
       }
+    },
+    {
+      "type": "localization",
+      "alias": "<PackageName>.Overrides.Da",
+      "name": "<PackageName> Danish core wording",
+      "weight": 50,
+      "meta": {
+        "culture": "da",
+        "localizations": {
+          "actions": {
+            "assigndomain": "Domæner"
+          }
+        }
+      }
     }
   ]
 }

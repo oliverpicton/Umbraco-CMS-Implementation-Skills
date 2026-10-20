@@ -7,7 +7,7 @@ namespace Umbraco_CMS.Skills.TestHost.Blank;
 
 /// <summary>
 /// Deterministic runtime validation of umbraco-backoffice-localization approach A: the skill's
-/// manifest, JS modules and core-override manifest, written under App_Plugins by the example's
+/// manifest, JS modules and core-override manifest (en and da), written under App_Plugins by the example's
 /// ExampleHostWiring.cs and read back through Umbraco's own package manifest service and static files.
 ///
 /// Runs on SITE 2. It proves Umbraco REGISTERS the localization extensions and SERVES the modules; the
@@ -52,18 +52,35 @@ public class BackofficeLocalizationBlankTests
             "the identical manifest one folder deeper must be ignored, which is why the skill puts it directly under App_Plugins/<Package>/");
     }
 
-    [Test]
-    public async Task Override_manifest_carries_a_weight_below_the_default_and_the_core_key()
+    [TestCase("en", "Domains")]
+    [TestCase("da", "Domæner")]
+    public async Task Override_manifest_carries_a_weight_below_the_default_and_the_core_key(string culture, string expectedText)
     {
         PackageManifest manifest = (await ManifestsAsync()).SingleOrDefault(m => m.Name == PackageName + ".Overrides")
             ?? throw new AssertionException("the overrides package was not registered");
 
-        JsonElement extension = Extensions(manifest).Single();
+        JsonElement extension = Extensions(manifest)
+            .SingleOrDefault(e => e.GetProperty("meta").GetProperty("culture").GetString() == culture);
+        Assert.That(extension.ValueKind, Is.EqualTo(JsonValueKind.Object),
+            $"the overrides package needs a '{culture}' extension: a core translation in the editor's language beats an 'en' override");
         Assert.That(extension.GetProperty("weight").GetInt32(), Is.LessThan(100),
             "Umbraco's own translations use the default weight 100, so an override must be lower");
         Assert.That(
             extension.GetProperty("meta").GetProperty("localizations").GetProperty("actions").GetProperty("assigndomain").GetString(),
-            Is.EqualTo("Domains"));
+            Is.EqualTo(expectedText));
+    }
+
+    [Test]
+    public async Task Core_danish_dictionary_translates_the_overridden_key_itself()
+    {
+        // Why the overrides need a 'da' extension: Umbraco's Danish UI dictionary has its own text for
+        // the key, and the backoffice reads the user's language before it falls back to 'en'.
+        HttpResponseMessage response = await BlankSiteFixture.Client.GetAsync("/umbraco/backoffice/assets/lang/da.js");
+        string core = await response.Content.ReadAsStringAsync();
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK), "the shipped Danish UI dictionary must be served");
+        Assert.That(core, Does.Match("""assigndomain:\s*['"]Tilføj domæne['"]"""),
+            "core da.js must translate actions.assigndomain itself, which is what hides an 'en'-only override from Danish editors");
     }
 
     [Test]

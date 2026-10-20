@@ -26,7 +26,8 @@ different fallback rules, so identify which text you are translating before writ
 **How to decide.** Default to **A**: nearly all backoffice text is UI localization, and `.NET`
 localization is only for strings the server composes itself. Use **B** when the string is produced in
 C# and sent out (an email subject, an error from a login flow, a health check message). A request can
-need both: say which part each file serves.
+need both: say which part each file serves. Open the chosen reference and start from its assets before
+writing any file.
 
 Website content in several languages (variants, domains, dictionary items) is a different feature,
 handled by the `umbraco-multilingual` skill. If the same strings must exist for visitors, do not put
@@ -43,17 +44,21 @@ Umbraco 17+. The UI system is the extension-registry `localization` type (Umbrac
 ## Best practices
 
 - Keep UI keys grouped as `area` then `key`. Every key is requested as `area_key`, and only one
-  grouping level exists. Prefix areas with your package name so they cannot collide with core areas.
+  grouping level exists. Prefix areas with your package name so they cannot collide with core areas,
+  in camelCase with letters, digits and `_` only (`acmeWelcome`, not `Acme.Welcome`): a `#area_key`
+  reference stops matching at a `.` or `-`.
 - Ship an `en` file as the complete set. English is the fallback for every missing UI key, so other
   cultures can be partial.
 - Server-side text falls back to the **English (`en-US`) file only**, so `en.user.xml` must hold every
   key you use. A key missing from English too, or a culture with no language file at all, returns
-  `[key]`.
+  `[key]`. Give keys distinctive aliases: a key missing from your area is first looked up by alias in
+  every other area, so a generic one (`publish`) can pick up unrelated core text.
 - Register a manifest only at `App_Plugins/` or `App_Plugins/<Package>/`. A deeper folder is ignored
   without any error.
 - Do not edit the core language files. Override with your own extension (UI) or `.user.xml` (server).
 - Tell the user a restart is needed after registering or renaming a manifest, a browser reload after
   editing a JS text, and a restart after editing a `.user.xml`.
+
 ## Reply checklist
 
 End your reply to the user with these, each as its own sentence (a code comment does not count):

@@ -42,6 +42,10 @@ These come from the Umbraco source (`LocalizedTextServiceFileSources`, `Localize
   (`en.user.xml` is read for `en-US` as well), not from your default language. If English lacks the key
   too, the result is `[key]` (for example `[subject]`), and a culture with no language file at all also
   returns `[key]` and logs a warning. So put every key in `en.user.xml`; other languages may be partial.
+- **A missing key can borrow another area's text.** Before giving up with `[key]`, the lookup tries the
+  same alias in *any* area of that culture. `subject` and `body` exist in no core area, but a generic
+  alias such as `publish` would return Umbraco's own text instead of `[publish]`. Use distinctive
+  aliases.
 - **`.user.xml` overrides, other files only add.** Keys in `config/lang` replace core keys of the same
   area and alias. Keys in a plugin's own `App_Plugins/<Package>/lang/<culture>.xml` are only added and
   never replace a core key, so a package should use its own area. A whole new area is simply added.
@@ -63,6 +67,9 @@ These come from the Umbraco source (`LocalizedTextServiceFileSources`, `Localize
   system's placeholder and is not replaced here.
 - **File naming.** The language part must match the target language file by culture name or
   two-letter code; an unrelated name is ignored.
+- **A `.user.xml` cannot add a language.** The list of languages comes from Umbraco's own language
+  files, and any file whose name contains `user` is left out of it, so an `is.user.xml` for a language
+  Umbraco does not ship is silently ignored. Map such recipients to a language you do have.
 
 ## Done summary
 

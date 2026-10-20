@@ -30,7 +30,8 @@ The shipped assets follow these pages. Read them before writing, since the manif
    - In a manifest (dashboard `meta.label`, section name and so on): `"#area_key"`.
    - In the Document Type editor, as a name, tab, group, property name or description:
      `#area_key`. A property **description** uses braces instead, `{#area_key}`, because
-     descriptions are Markdown and `#` would start a heading. Validation messages use braces too.
+     descriptions are Markdown and `#` would start a heading. A custom **validation message** is
+     plain text, so it uses `#area_key` like a name, not the braces the docs sample shows.
    - In your own element: `<umb-localize key="area_key">English default</umb-localize>` or
      `this.localize.term('area_key')`.
 5. **Tell the user** that Umbraco must be restarted for a new or changed manifest, that later text
@@ -49,6 +50,13 @@ Confirm against the pinned Umbraco version if a result looks different.
   is applied last and overrides. The default weight is 100 and Umbraco's own translations use it.
   To change core wording give your extension a weight **below 100** (the asset uses 50) and reuse the
   core key, for example `actions_assigndomain`. At equal weight the winner is not defined.
+- **Override core wording in every UI culture your editors use.** A key is looked up in the user's
+  regional culture, then their language, and only then in `en`. Umbraco ships translations of most
+  core keys (Danish has `actions_assigndomain: 'Tilføj domæne'`), so an `en`-only override never
+  reaches a Danish editor. Add an extension per culture, as the asset does for `en` and `da`.
+- **Validation messages are not Markdown.** They are rendered by replacing each `#area_key` with its
+  text and nothing else, so `{#area_key}` there shows the translation wrapped in literal braces.
+  Only descriptions (Umbraco Flavored Markdown) take the brace form.
 - **Which culture files load.** For a user whose UI culture is `da-DK`, extensions with culture
   `da-DK` or `da` load, plus `en` always. A file registered as `da-DK` is not used for plain `da`.
   Register the short language code unless you need a regional difference.

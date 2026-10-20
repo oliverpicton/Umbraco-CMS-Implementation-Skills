@@ -15,7 +15,7 @@
         "Each JS localization module uses 'export default' with text grouped one level deep as area then key (for example contentTypes: { article: '...' }), and the Danish file contains real Danish text",
         "The dashboard manifest's meta.label is changed to a '#area_key' reference such as '#welcomeDashboard_label' and that exact key exists in both languages",
         "The dashboard element's hardcoded strings are replaced with localized lookups ('this.localize.term(...)' or '<umb-localize key=...>'), and the 'You have 3 pages' text is localized in a way that carries the number (an argument, a '{0}' or '%0%' placeholder, or a function value) rather than a fixed sentence",
-        "The agent states that the property DESCRIPTION and the validation message use the brace form '{#area_key}' while names, tab, group and Document Type name/description use '#area_key'",
+        "The agent states that the property DESCRIPTION uses the brace form '{#area_key}' (it is Markdown) while the validation message, names, tab, group and Document Type name/description use plain '#area_key'; it does not tell the user to wrap the validation message in braces",
         "The agent states that Umbraco must be restarted for the new manifest and that later text changes only need a browser reload",
         "The agent says the language shown follows each user's UI Culture setting",
         "The agent states whether it ran a build or opened the backoffice; it does not claim to have seen the translated backoffice unless it did"
@@ -51,7 +51,7 @@
       ],
       "expectations": [
         "Language files are created at config/lang/ (project root) named <language>.user.xml or <culture>.user.xml for en, da and de, using the '<language><area><key>' layout",
-        "The texts live under one area (the existing code's 'welcome' may be kept) with the keys 'subject' and 'body', the C# asks for that same area and keys, and every one of the three language files contains BOTH keys",
+        "The texts live under one area (the existing code's 'welcome' may be kept) with one key for the subject and one for the body ('subject' and 'body', or more distinctive names such as 'welcomeEmailSubject'), the C# asks for that same area and keys, and every one of the three language files contains BOTH keys",
         "The user's name is passed as a token: the XML uses '%0%' (not '{0}') and the C# passes the name through the tokens argument, and the existing 'body.Replace(\"{0}\", user.Name)' is removed or no longer needed",
         "WelcomeEmailSender passes an explicit CultureInfo derived from IUser.Language to Localize (the overload that takes a culture); it does not rely on the two-argument Localize(area, key), whose culture is the current thread's",
         "The .csproj gets '<Content Include=\"config/**\" CopyToOutputDirectory=\"Always\" />' (or an equivalent that copies config/lang on publish)",
