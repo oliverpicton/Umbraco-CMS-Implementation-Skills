@@ -11,6 +11,14 @@ warnings show up for `.cs` files but never for views.
 **Look for:** `@Model.Hero.Url()` with no `?.`, `@foreach (var x in Model.Items)` over a picker,
 `!` inside `@( … )`, and partials that assume their model is non-null.
 
+## Contents
+
+- [Do views get nullable checking at all?](#do-views-get-nullable-checking-at-all): read when you are unsure why a `.cshtml` file shows no nullable warnings.
+- [What `UmbracoViewPage` gives you](#what-umbracoviewpage-gives-you): read when you are using `Umbraco` or `UmbracoContext` inside a view.
+- [Patterns](#patterns): read when you are writing view markup that reads values, pickers or media that may be null.
+- [Partials and view components with nullable data](#partials-and-view-components-with-nullable-data): read when you are passing possibly-null data to a partial or view component.
+- [Things to avoid in views](#things-to-avoid-in-views): read when you want a quick check for habits that cause null errors in views.
+
 ## Do views get nullable checking at all?
 
 Razor views are compiled with the project's nullable setting **only when they are compiled at build

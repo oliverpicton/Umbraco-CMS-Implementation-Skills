@@ -14,6 +14,13 @@ notification handler; `!` scattered after accessor calls.
 `out IUmbracoContext? ctx` followed by `ctx!.`, and `GetRequiredUmbracoContext()` in code that isn't
 handling an HTTP request.
 
+## Contents
+
+- [How the flow analysis works](#how-the-flow-analysis-works): read when you are calling a `TryGet…` accessor and want the compiler to treat the out value as not-null without `!`.
+- [`GetRequiredUmbracoContext()`: when it's right and when it's wrong](#getrequiredumbracocontext-when-its-right-and-when-its-wrong): read when you are deciding whether `GetRequiredUmbracoContext()` is safe, for example in a hosted service or notification handler.
+- [Outside a request: `IUmbracoContextFactory.EnsureUmbracoContext()`](#outside-a-request-iumbracocontextfactoryensureumbracocontext): read when code runs without an HTTP request and needs an `UmbracoContext`, or only needs to look content up by key or id.
+- [Writing your own `Try*` helper](#writing-your-own-try-helper): read when you are writing your own `Try*` method and want callers to get the same null analysis.
+
 ## How the flow analysis works
 
 The three request-scoped accessors declare their out parameter as non-nullable and mark it

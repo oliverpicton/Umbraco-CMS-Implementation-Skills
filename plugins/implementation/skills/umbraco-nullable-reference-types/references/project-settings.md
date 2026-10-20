@@ -6,6 +6,14 @@ annotating your own helpers.
 **Fetch first:** Microsoft's [nullable migration strategies](https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/update-applications/nullable-migration-strategies)
 and [nullable static analysis attributes](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/attributes/nullable-analysis).
 
+## Contents
+
+- [Turn it on the way Umbraco does](#turn-it-on-the-way-umbraco-does): read when you are enabling nullable checking, or making nullable warnings fail the build.
+- [Adopting it in an existing site](#adopting-it-in-an-existing-site): read when you are moving an existing codebase to nullable checking in stages.
+- [CS8618: view models and options classes](#cs8618-view-models-and-options-classes): read when you are fixing CS8618 on view models or on options classes bound from configuration.
+- [Annotate your own helpers](#annotate-your-own-helpers): read when you are adding `[NotNullWhen]` or `[MemberNotNull]` to your own helpers.
+- [Decision rule](#decision-rule): read when the compiler says a value may be null and you need to choose between a guard, a default and `!`.
+
 ## Turn it on the way Umbraco does
 
 Umbraco's own repository sets both properties in its root `Directory.Build.props`. The project

@@ -14,6 +14,14 @@ value, `defaultValue:` without `fallback:`.
 Return types for each API are listed once in [umbraco-nullable-surface.md](umbraco-nullable-surface.md).
 This file covers what to do with them.
 
+## Contents
+
+- [Why `!` is the trap](#why--is-the-trap): read when you are tempted to silence a warning on a property value with `!`.
+- [Strings and scalars](#strings-and-scalars): read when you are reading text or number values and need a fallback or a non-null result.
+- [Pickers](#pickers): read when you are reading content or multinode pickers and iterating over the result.
+- [Media](#media): read when you are reading single or multiple media pickers or crop URLs.
+- [Models Builder properties](#models-builder-properties): read when you are using generated Models Builder properties and the compiler or runtime treats them as maybe-null.
+
 ## Why `!` is the trap
 
 `Value<T>()` returns `T?`, and Models Builder properties are `[MaybeNull]`. That is because content is
