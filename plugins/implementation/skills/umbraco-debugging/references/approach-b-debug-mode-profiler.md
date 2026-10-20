@@ -6,6 +6,12 @@ question is "why is this page slow?", or when you need evidence from a dev, test
 nobody can attach a debugger to. To read inside an Umbraco method line by line, use
 [Approach A](approach-a-sourcelink.md) instead.
 
+## Contents
+
+- [Fetch the docs first](#fetch-the-docs-first): read when you need the official docs pages for debug mode and MiniProfiler, and where they fall short.
+- [Steps](#steps): read when you are turning on debug mode, profiling a request, adding your own `IProfiler` steps, or deciding what to use on a production site.
+- [Done](#done): read before replying, to check the answer covers the setting, the restart, how to trigger and read a profile, and turning it off afterwards.
+
 ## Fetch the docs first
 
 - [Testing and Debugging](https://docs.umbraco.com/umbraco-cms/17.latest/develop-with-umbraco/testing-and-debugging.md):

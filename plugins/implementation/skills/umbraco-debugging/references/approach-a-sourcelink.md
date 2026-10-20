@@ -8,6 +8,14 @@ environment you can't attach to, use [Approach B](approach-b-debug-mode-profiler
 Everything here is **IDE configuration on the developer's machine**. Nothing in the project changes,
 apart from the optional VS Code `launch.json` and the optional probe class.
 
+## Contents
+
+- [Fetch the docs first, then correct them](#fetch-the-docs-first-then-correct-them): read when you are about to follow Umbraco's SourceLink docs page and need to know where it is out of date for Umbraco 17.
+- [Why Source Link alone is not enough](#why-source-link-alone-is-not-enough): read when F11 steps over Umbraco code, symbols do not load, or locals show as optimized away, and you need the settings that must all be true.
+- [Steps](#steps): read when you are setting up the debugger for a specific IDE (Visual Studio, Rider or VS Code) and verifying that you can step into Umbraco source.
+- [Troubleshooting](#troubleshooting): read when the setup is done but breakpoints do not hit, symbols are missing, or you see decompiled code.
+- [Done](#done): read before replying, to check the answer covers every setting, the VS Code configuration, where to break and how to confirm.
+
 ## Fetch the docs first, then correct them
 
 Umbraco's page is
