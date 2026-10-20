@@ -42,10 +42,11 @@ public sealed class NullSafeContentMapper
 
     public NullSafeContentViewModel Map(IPublishedContent content)
     {
-        // Value<T>() is declared T? — it returns null when the property is blank, when the Document
-        // Type has no property with that alias, and when the stored value can't convert to T.
-        // string.IsNullOrWhiteSpace carries [NotNullWhen(false)], so in the false branch the compiler
-        // already knows `title` is not null: no `!` needed.
+        // Value<T>() is declared T? — null when the Document Type has no property with that alias, or
+        // the stored value can't convert to T. A BLANK Textstring/Textarea is "", not null, so
+        // `?? content.Name` would never fall back: IsNullOrWhiteSpace covers both. It also carries
+        // [NotNullWhen(false)], so in the false branch the compiler already knows `title` is not
+        // null: no `!` needed.
         string? title = content.Value<string>(_publishedValueFallback, TitleAlias);
         string resolvedTitle = string.IsNullOrWhiteSpace(title) ? content.Name : title;
 

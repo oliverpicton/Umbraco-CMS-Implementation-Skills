@@ -35,8 +35,9 @@ docs. Every Umbraco-specific contract in `references/` was checked against the v
 | `.cshtml` templates and partials | `@Model.Value<...>()!`, `foreach` / `.Any()` over a picker value | [razor-views.md](references/razor-views.md) |
 | Turning NRT on, CS8618, your own helpers | `<Nullable>`, `#nullable disable`, uninitialised view-model strings, `IOptions<T>` classes | [project-settings.md](references/project-settings.md) |
 
-Read only the files the code in front of you touches. A compiled, tested example of the controller
-→ mapper → view-model shape is in [`assets/`](assets/).
+Before writing code, open the reference for each situation the code in front of you touches, and
+only those. A compiled, tested example of the controller → mapper → view-model shape is in
+[`assets/`](assets/): start from it when you write that shape.
 
 ## Best practices
 
@@ -48,8 +49,11 @@ Read only the files the code in front of you touches. A compiled, tested example
   with a comment saying why. `!` and `#nullable disable` silence the compiler and leave the same
   `NullReferenceException` waiting for the first empty field.
 - **`defaultValue:` alone does nothing.** `Value<T>(alias, defaultValue: x)` applies `x` only when you
-  also pass `fallback: Fallback.ToDefaultValue`, and the return type stays `T?` either way. `?? x` is
-  usually simpler.
+  also pass `fallback: Fallback.ToDefaultValue`, and the return type stays `T?` either way.
+- **A blank text property is `""`, not `null`.** `Value<string>()` on an empty Textstring or Textarea
+  returns `string.Empty`, so `Value<string>("title") ?? content.Name` never falls back. Use
+  `string.IsNullOrWhiteSpace` or `fallback: Fallback.ToDefaultValue` when blank should mean "use
+  something else". `null` comes back when the alias isn't on the Document Type.
 - **Use the `Try*` accessors and act on `false`.** `TryGetUmbracoContext` / `TryGetUmbracoHelper`
   are annotated so the `out` value is non-null when they return `true`. Don't call
   `GetRequiredUmbracoContext()` where there may be no request. Instead, inject the singleton
@@ -70,7 +74,7 @@ Read only the files the code in front of you touches. A compiled, tested example
 ## Version compatibility
 
 Targets **Umbraco 17** (`net10.0`). Contracts were checked against the Umbraco CMS source at
-`release-17.7.1`, and the `assets/` compile against the repo's pinned Umbraco 17 with
+`release-17.5.3` (the version this repo pins), and the `assets/` compile against the repo's pinned Umbraco 17 with
 `Nullable=enable` and `WarningsAsErrors=nullable`. Umbraco has shipped NRT annotations since v10, so
 the patterns apply from v10, but individual signatures (for example `Parent()` vs `.Parent`) differ
 in older versions — check the installed version before relying on one.
@@ -78,5 +82,5 @@ in older versions — check the installed version before relying on one.
 ## Validation
 
 Objective assertions live in [`evals/evals.json`](evals/evals.json); run them with
-`umbraco-skill-evaluator`. The `assets/` are compiled and HTTP-asserted on the Clean reference host
-by the `dotnet test` gate (`examples/approach-a-nullable-patterns/`).
+`umbraco-skill-evaluator`. The `assets/` are **Asserted**: compiled and HTTP-asserted on the Clean
+reference host by the `dotnet test` gate (`examples/approach-a-nullable-patterns/`).

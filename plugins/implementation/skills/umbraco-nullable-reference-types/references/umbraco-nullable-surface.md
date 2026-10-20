@@ -11,13 +11,13 @@ Umbraco builds its own source with `<Nullable>enable</Nullable>` and
 `<WarningsAsErrors>nullable</WarningsAsErrors>` (repository `Directory.Build.props`), so its public
 signatures carry real annotations. Trust the signature: a `?` means a real `null` at runtime, not a
 theoretical one. Paths below are relative to the Umbraco CMS `src/` folder, checked at the
-`release-17.7.1` tag.
+`release-17.5.3` tag.
 
 ## Content and properties
 
 | API | Returns | Null when | Source |
 |---|---|---|---|
-| `content.Value<T>(alias, …)` | `T?` | Property missing, empty, or its converter returns null. For value types `T?` is just `T`, so you get `default` (`0`, `false`, `DateTime.MinValue`) | `Umbraco.Web.Common/Extensions/FriendlyPublishedContentExtensions.cs`, `Umbraco.Core/Extensions/PublishedContentExtensions.cs` |
+| `content.Value<T>(alias, …)` | `T?` | Alias not on the Document Type, or the value can't convert to `T`. A blank value gives the converter's own "no value", which is `null` only for some editors: Textstring/Textarea give `""` (`Umbraco.Core/PropertyEditors/TextStringValueConverter.cs`), a multiple Media Picker an empty collection, single pickers `null`. For value types `T?` is just `T`, so you get `default` (`0`, `false`, `DateTime.MinValue`) | `Umbraco.Web.Common/Extensions/FriendlyPublishedContentExtensions.cs`, `Umbraco.Core/Extensions/PublishedContentExtensions.cs` |
 | `content.Value(alias, …)` | `object?` | As above | same |
 | `content.HasValue(alias, …)` | `bool` | n/a | same |
 | `element.Value<T>(alias, …)` (block items) | `T?` | As above | `Umbraco.Web.Common/Extensions/FriendlyPublishedElementExtensions.cs` |

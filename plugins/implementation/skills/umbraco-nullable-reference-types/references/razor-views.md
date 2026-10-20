@@ -39,11 +39,14 @@ Use `UmbracoContext?.…`, or inject `IUmbracoContextAccessor` and follow
 
 Razor needs parentheses around generic calls, so write `@(Model.Value<string>("title"))`, not
 `@Model.Value<string>("title")`. Writing `null` to the output renders nothing, so plain output
-needs no guard. Only **dereferences** need one.
+needs no guard. Only **dereferences** need one. For a fallback, remember a blank text property is
+`""`, not `null`: `?? Model.Name` never fires, so use `Fallback.ToDefaultValue` (as for the `<h1>`
+below) or `string.IsNullOrWhiteSpace`.
 
 ```cshtml
 @inherits UmbracoViewPage
 @using Umbraco.Cms.Core.Models
+@using Umbraco.Cms.Core.Models.PublishedContent
 @{
     string? intro = Model.Value<string>("intro");
     MediaWithCrops? hero = Model.Value<MediaWithCrops>("heroImage");
@@ -51,7 +54,7 @@ needs no guard. Only **dereferences** need one.
         Model.Value<IEnumerable<IPublishedContent>>("related") ?? [];
 }
 
-<h1>@(Model.Value<string>("title") ?? Model.Name)</h1>
+<h1>@(Model.Value<string>("title", fallback: Fallback.ToDefaultValue, defaultValue: Model.Name))</h1>
 
 @if (!string.IsNullOrWhiteSpace(intro))
 {

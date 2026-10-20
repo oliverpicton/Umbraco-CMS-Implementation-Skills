@@ -30,10 +30,12 @@ app code, so don't silence it. The decision rule for when `!` is acceptable is i
 ## Strings and scalars
 
 ```csharp
-// string? -> string: coalesce at the point of use.
-string title = content.Value<string>("title") ?? content.Name;
+// string? -> string. A blank Textstring/Textarea returns "", not null, so `?? content.Name` would
+// never fire for an editor who cleared the field. IsNullOrWhiteSpace covers null and blank.
+string? rawTitle = content.Value<string>("title");
+string title = string.IsNullOrWhiteSpace(rawTitle) ? content.Name : rawTitle;
 
-// Or let Umbraco apply the default. defaultValue is IGNORED unless fallback includes
+// Or let Umbraco apply the default: it is used for a blank value and a missing alias alike. defaultValue is IGNORED unless fallback includes
 // Fallback.ToDefaultValue, and the return type is still string?, so the compiler wants ?? anyway
 // if you dereference it.
 string? subtitle = content.Value<string>("subtitle", fallback: Fallback.ToDefaultValue, defaultValue: content.Name);
@@ -43,7 +45,8 @@ int? maxItems = content.Value<int?>("maxItems");
 ```
 
 `string.IsNullOrWhiteSpace(x)` narrows `x` to not-null in its `false` branch (it is annotated
-`[NotNullWhen(false)]` in .NET), so it is a good guard when an empty string should count as missing.
+`[NotNullWhen(false)]` in .NET), so it is the guard to use whenever a blank value should count as
+missing. Keep `?? string.Empty` for when you only need a non-null string and blank is fine as it is.
 
 `content.HasValue("alias")` tells you whether a value exists, but it does **not** narrow the type
 of a later `Value<T>()` call. The compiler still sees `T?`. Prefer reading once and testing the

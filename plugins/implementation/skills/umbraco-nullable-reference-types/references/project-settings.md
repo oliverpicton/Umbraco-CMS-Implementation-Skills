@@ -59,9 +59,11 @@ public sealed class ArticleViewModel
 }
 
 // Creation sites must satisfy `required`. The nullable values are resolved here, once.
+// A blank title is "", not null, so the fallback goes through Fallback.ToDefaultValue, not `??`.
 var model = new ArticleViewModel
 {
-    Title = content.Value<string>("title") ?? content.Name,
+    Title = content.Value<string>("title", fallback: Fallback.ToDefaultValue, defaultValue: content.Name)
+        ?? content.Name,
     Url = content.Url(),
     Summary = content.Value<string>("summary"),
 };
@@ -122,8 +124,10 @@ When the compiler says a value may be null, choose in this order:
 
 1. **Guard:** `if (x is null) return …;`, `is { } x`, or `TryGet…` with an early return. Use this
    when "missing" changes what happens: a 404, skipping a block, not rendering a partial.
-2. **Default:** `?? string.Empty`, `?? []`, `?? content.Name`, or
-   `fallback: Fallback.ToDefaultValue`. Use this when a missing value has a sensible substitute.
+2. **Default:** `?? string.Empty`, `?? []`, `fallback: Fallback.ToDefaultValue`, or
+   `string.IsNullOrWhiteSpace(x) ? content.Name : x`. Use this when a missing value has a sensible
+   substitute. For text, `??` only catches `null`: a blank Textstring is `""`, so a substitute
+   like `content.Name` needs one of the last two.
 3. **`!`:** only when you can prove the value is non-null and the compiler can't see it. Add a
    comment that states the proof, for example
    `// set in OnActionExecuting, which always runs before this action`. "The editor always
