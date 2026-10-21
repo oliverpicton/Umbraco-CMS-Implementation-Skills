@@ -39,7 +39,8 @@
 
     Generated .cshtml/.xml/.json/.js are EmbeddedResource, not Razor/Content: a content-shaped approach
     installs its template through a package migration at boot, so the host writes the .cshtml
-    itself. (The SDK's default globs already ignore obj/, so they can't be double-counted.)
+    itself, and a backoffice manifest (umbraco-package.json) is written into App_Plugins the same way.
+    (The SDK's default globs already ignore obj/, so they can't be double-counted.)
   -->
   <Target Name="GenerateSkillAssets"
           BeforeTargets="BeforeBuild;PrepareResources;BeforeCompile"
